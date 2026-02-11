@@ -1205,7 +1205,7 @@ function PropertyFormModal({
                           connectivity: {
                             ...formData.connectivity,
                             [connectivityInput.category]: [
-                              ...(formData.connectivity[connectivityInput.category] || []),
+                              ...(formData.connectivity[connectivityInput.category as keyof typeof formData.connectivity] || []),
                               newItem,
                             ],
                           },
