@@ -43,7 +43,7 @@ export async function uploadImage(
       });
     } else {
       // If it's a File object, convert to buffer
-      const arrayBuffer = await file.arrayBuffer();
+      const arrayBuffer = await (file as unknown as Blob).arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       uploadResult = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream(
@@ -97,7 +97,7 @@ export async function uploadVideo(
         ).end(file);
       });
     } else {
-      const arrayBuffer = await file.arrayBuffer();
+      const arrayBuffer = await (file as unknown as Blob).arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       uploadResult = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream(
