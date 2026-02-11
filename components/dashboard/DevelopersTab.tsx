@@ -135,7 +135,7 @@ export default function DevelopersTab() {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <svg
                       key={star}
-                      className={`w-4 h-4 ${star <= developer.rating ? 'text-orange-400' : 'text-gray-300'}`}
+                      className={`w-4 h-4 ${star <= (developer.rating || 0) ? 'text-orange-400' : 'text-gray-300'}`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
