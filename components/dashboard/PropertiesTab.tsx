@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { EXTERNAL_AMENITIES } from '@/lib/constants';
 
 interface Property {
   _id: string;
@@ -18,6 +19,7 @@ interface Property {
   showInTopSelling?: boolean;
   showInPremium?: boolean;
   showInNewlyLaunched?: boolean;
+  featured?: boolean;
   // Highlights section
   highlights?: string[];
   // Overview section
@@ -49,6 +51,7 @@ interface Property {
     entertainment?: Array<{ name: string; distance: string; time: string }>;
     essentials?: Array<{ name: string; distance: string; time: string }>;
   };
+  reraQrCode?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -336,11 +339,12 @@ function PropertyFormModal({
       entertainment: [],
       essentials: [],
     },
+    reraQrCode: property?.reraQrCode || '',
   });
-  
+
   // State for managing dynamic inputs
   const [highlightInput, setHighlightInput] = useState('');
-  const [amenityInput, setAmenityInput] = useState('');
+  // const [amenityInput, setAmenityInput] = useState(''); // Removed in favor of checkboxes
   const [facilityInput, setFacilityInput] = useState('');
   const [pricingInput, setPricingInput] = useState({ type: '', carpetArea: '', price: '' });
   const [connectivityInput, setConnectivityInput] = useState({ category: 'commute', name: '', distance: '', time: '' });
@@ -348,10 +352,11 @@ function PropertyFormModal({
   const [submitting, setSubmitting] = useState(false);
   const [imageInput, setImageInput] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Client-side validation
     if (!formData.name.trim()) {
       alert('Please enter a property name');
@@ -395,7 +400,7 @@ function PropertyFormModal({
         ? `/api/properties/${property._id}`
         : '/api/properties';
       const method = property ? 'PUT' : 'POST';
-      
+
       // Extract price from pricing array if price is not set
       let finalPrice = formData.price;
       if ((!finalPrice || finalPrice <= 0) && formData.pricing && formData.pricing.length > 0) {
@@ -406,7 +411,7 @@ function PropertyFormModal({
           finalPrice = numericPrice;
         }
       }
-      
+
       // Prepare data for API
       const submitData = {
         ...formData,
@@ -415,7 +420,7 @@ function PropertyFormModal({
         bathrooms: formData.bathrooms ? parseInt(formData.bathrooms.toString()) : undefined,
         area: formData.area ? parseInt(formData.area.toString()) : undefined,
       };
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -519,7 +524,7 @@ function PropertyFormModal({
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
               />
             </div>
           </div>
@@ -727,6 +732,78 @@ function PropertyFormModal({
                 />
               </div>
               <div className="md:col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">RERA QR Code Image</label>
+                  {uploadingQr && <span className="text-xs text-brand-teal animate-pulse">Uploading...</span>}
+                </div>
+                <div className="space-y-3">
+                  {/* File Upload for QR */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert('File size too large. Maximum size is 5MB.');
+                        return;
+                      }
+
+                      setUploadingQr(true);
+                      try {
+                        const uploadData = new FormData();
+                        uploadData.append('file', file);
+
+                        const response = await fetch('/api/upload/image', {
+                          method: 'POST',
+                          body: uploadData,
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json();
+                          throw new Error(error.error || 'Failed to upload QR code');
+                        }
+
+                        const data = await response.json();
+                        setFormData({ ...formData, reraQrCode: data.url });
+                      } catch (error: any) {
+                        console.error('Error uploading QR code:', error);
+                        alert(error.message || 'Failed to upload QR code');
+                      } finally {
+                        setUploadingQr(false);
+                      }
+                    }}
+                    disabled={uploadingQr}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent disabled:opacity-50"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400 font-medium">OR</span>
+                    <input
+                      type="text"
+                      placeholder="Enter QR Code Image URL"
+                      value={formData.reraQrCode}
+                      onChange={(e) => setFormData({ ...formData, reraQrCode: e.target.value })}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+
+                  {formData.reraQrCode && (
+                    <div className="mt-2 w-32 h-32 border border-gray-100 rounded-xl overflow-hidden flex items-center justify-center p-2 bg-gray-50 shadow-inner group relative">
+                      <img src={formData.reraQrCode} alt="RERA QR Preview" className="max-w-full max-h-full object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, reraQrCode: '' })}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
                 <textarea
                   rows={2}
@@ -809,131 +886,106 @@ function PropertyFormModal({
             </div>
           </div>
 
-          {/* Amenities Section */}
+          {/* Amenities & Facilities */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Amenities</h3>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter amenity (e.g., Swimming Pool)"
-                  value={amenityInput}
-                  onChange={(e) => setAmenityInput(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (amenityInput.trim()) {
-                        setFormData({
-                          ...formData,
-                          amenities: [...formData.amenities, amenityInput.trim()],
-                        });
-                        setAmenityInput('');
-                      }
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (amenityInput.trim()) {
-                      setFormData({
-                        ...formData,
-                        amenities: [...formData.amenities, amenityInput.trim()],
-                      });
-                      setAmenityInput('');
-                    }
-                  }}
-                  className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition"
-                >
-                  Add
-                </button>
-              </div>
-              {formData.amenities.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {formData.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center bg-gray-50 px-3 py-1 rounded">
-                      <span className="text-sm text-gray-700">{amenity}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({
-                            ...formData,
-                            amenities: formData.amenities.filter((_, i) => i !== index),
-                          });
-                        }}
-                        className="text-red-600 hover:text-red-800 ml-2"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Amenities & Facilities</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
+                <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto bg-white">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {EXTERNAL_AMENITIES.map((amenity) => (
+                      <label key={amenity.name} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                        <input
+                          type="checkbox"
+                          checked={formData.amenities.includes(amenity.name)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({
+                                ...formData,
+                                amenities: [...formData.amenities, amenity.name],
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                amenities: formData.amenities.filter((a) => a !== amenity.name),
+                              });
+                            }
+                          }}
+                          className="w-4 h-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
+                        />
+                        <span className="text-sm text-gray-700">{amenity.icon} {amenity.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Selected: {formData.amenities.length} amenities
+                </p>
+              </div>
 
-          {/* Facilities Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Facilities</h3>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter facility (e.g., Lift)"
-                  value={facilityInput}
-                  onChange={(e) => setFacilityInput(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (facilityInput.trim()) {
-                        setFormData({
-                          ...formData,
-                          facilities: [...formData.facilities, facilityInput.trim()],
-                        });
-                        setFacilityInput('');
-                      }
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (facilityInput.trim()) {
-                      setFormData({
-                        ...formData,
-                        facilities: [...formData.facilities, facilityInput.trim()],
-                      });
-                      setFacilityInput('');
-                    }
-                  }}
-                  className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition"
-                >
-                  Add
-                </button>
-              </div>
-              {formData.facilities.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {formData.facilities.map((facility, index) => (
-                    <div key={index} className="flex items-center bg-gray-50 px-3 py-1 rounded">
-                      <span className="text-sm text-gray-700">{facility}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Facilities (Internal)</label>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter facility (e.g., Lift)"
+                      value={facilityInput}
+                      onChange={(e) => setFacilityInput(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (facilityInput.trim()) {
+                            setFormData({
+                              ...formData,
+                              facilities: [...formData.facilities, facilityInput.trim()],
+                            });
+                            setFacilityInput('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (facilityInput.trim()) {
                           setFormData({
                             ...formData,
-                            facilities: formData.facilities.filter((_, i) => i !== index),
+                            facilities: [...formData.facilities, facilityInput.trim()],
                           });
-                        }}
-                        className="text-red-600 hover:text-red-800 ml-2"
-                      >
-                        ×
-                      </button>
+                          setFacilityInput('');
+                        }
+                      }}
+                      className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.facilities.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {formData.facilities.map((facility, index) => (
+                        <div key={index} className="flex items-center bg-gray-50 px-3 py-1 rounded">
+                          <span className="text-sm text-gray-700">{facility}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                facilities: formData.facilities.filter((_, i) => i !== index),
+                              });
+                            }}
+                            className="text-red-600 hover:text-red-800 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -1244,12 +1296,12 @@ function PropertyFormModal({
 
                     setUploadingImage(true);
                     try {
-                      const formData = new FormData();
-                      formData.append('file', file);
+                      const uploadData = new FormData();
+                      uploadData.append('file', file);
 
                       const response = await fetch('/api/upload/image', {
                         method: 'POST',
-                        body: formData,
+                        body: uploadData,
                       });
 
                       if (!response.ok) {
@@ -1366,8 +1418,8 @@ function PropertyFormModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 

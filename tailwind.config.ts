@@ -29,6 +29,12 @@ const config: Config = {
           '50%': { backgroundPosition: '100% 50%' },
         },
       },
+      boxShadow: {
+        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+        'soft-md': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
+        'soft-lg': '0 20px 60px -15px rgba(0, 0, 0, 0.1)',
+        'glow': '0 0 20px rgba(47, 185, 162, 0.3)',
+      },
     },
   },
   plugins: [],

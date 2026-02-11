@@ -10,14 +10,13 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'hero', label: 'Home' },
   { id: 'top-selling', label: 'Top Selling' },
-  { id: 'recent-blogs', label: 'Recent Blogs' },
+  { id: 'newly-launched', label: 'Newly Launched' },
   { id: 'premium-projects', label: 'Premium Projects' },
   { id: 'top-picks', label: 'Top Picks' },
-  { id: 'newly-launched', label: 'Newly Launched' },
+  { id: 'recent-blogs', label: 'Recent Blogs' },
+  { id: 'featured-developers', label: 'Developers' },
   { id: 'stats', label: 'Statistics' },
   { id: 'about', label: 'About Us' },
-  { id: 'featured-developers', label: 'Developers' },
-  { id: 'properties', label: 'Properties' },
 ];
 
 export default function PageNavigation() {
@@ -25,25 +24,25 @@ export default function PageNavigation() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-      // Show navigation after scrolling past hero section, hide when footer is visible
-      const handleScroll = () => {
-        const heroSection = document.getElementById('hero');
-        const footerSection = document.getElementById('footer');
-        
-        if (heroSection && footerSection) {
-          const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-          const footerTop = footerSection.offsetTop;
-          const scrollPosition = window.scrollY + window.innerHeight;
-          
-          // Show sidebar if past hero and not at footer
-          const pastHero = window.scrollY > heroBottom - 100;
-          const beforeFooter = scrollPosition < footerTop + 100;
-          
-          setIsVisible(pastHero && beforeFooter);
-        } else if (heroSection) {
-          const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-          setIsVisible(window.scrollY > heroBottom - 100);
-        }
+    // Show navigation after scrolling past hero section, hide when footer is visible
+    const handleScroll = () => {
+      const heroSection = document.getElementById('hero');
+      const footerSection = document.getElementById('footer');
+
+      if (heroSection && footerSection) {
+        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+        const footerTop = footerSection.offsetTop;
+        const scrollPosition = window.scrollY + window.innerHeight;
+
+        // Show sidebar if past hero and not at footer
+        const pastHero = window.scrollY > heroBottom - 100;
+        const beforeFooter = scrollPosition < footerTop - 50;
+
+        setIsVisible(pastHero && beforeFooter);
+      } else if (heroSection) {
+        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+        setIsVisible(window.scrollY > heroBottom - 100);
+      }
 
       // Determine active section based on scroll position
       const sections = navItems.map(item => ({
@@ -101,10 +100,9 @@ export default function PageNavigation() {
               onClick={() => scrollToSection(item.id)}
               className={`
                 relative px-3 py-2.5 text-xs font-semibold rounded-lg transition-all duration-300 text-left
-                ${
-                  activeSection === item.id
-                    ? 'bg-brand-red text-white shadow-md scale-105'
-                    : 'text-gray-600 hover:text-brand-red hover:bg-brand-red/10'
+                ${activeSection === item.id
+                  ? 'bg-brand-red text-white shadow-md scale-105'
+                  : 'text-gray-600 hover:text-brand-red hover:bg-brand-red/10'
                 }
               `}
               title={item.label}

@@ -35,8 +35,8 @@ export default function Home() {
         <div id="top-selling">
           <TopSellingProjects />
         </div>
-        <div id="recent-blogs">
-          <RecentBlogs />
+        <div id="newly-launched">
+          <NewlyLaunchedProjects />
         </div>
         <div id="premium-projects">
           <PremiumProjects />
@@ -44,8 +44,11 @@ export default function Home() {
         <div id="top-picks">
           <HousingTopPicks />
         </div>
-        <div id="newly-launched">
-          <NewlyLaunchedProjects />
+        <div id="recent-blogs">
+          <RecentBlogs />
+        </div>
+        <div id="featured-developers">
+          <FeaturedDevelopers />
         </div>
         <div id="stats">
           <StatsSection />
@@ -53,16 +56,8 @@ export default function Home() {
         <div id="about">
           <AboutSection />
         </div>
-        <div id="featured-developers">
-          <FeaturedDevelopers />
-        </div>
-        <div id="properties">
-          <PropertyListings />
-        </div>
       </div>
-      <div id="footer">
-        <Footer />
-      </div>
+      <Footer />
     </main>
   );
 }

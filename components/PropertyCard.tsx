@@ -93,7 +93,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
           <button
             onClick={() => window.location.href = `/view-details/${displayId}`}
-            className="bg-brand-red text-white px-6 py-2 rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm"
+            className="bg-brand-red text-white px-6 py-2 rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-soft-md hover:shadow-glow transform hover:-translate-y-1 text-sm"
           >
             View Details
           </button>

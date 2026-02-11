@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { EXTERNAL_AMENITIES } from '@/lib/constants';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PropertyStatsSidebar from '@/components/PropertyStatsSidebar';
 import PropertyContactSidebar from '@/components/PropertyContactSidebar';
+import EmiCalculator from '@/components/EmiCalculator';
 
 interface Property {
   _id: string;
@@ -48,6 +50,7 @@ interface Property {
     carpetArea: string;
     price: string;
   }>;
+  reraQrCode?: string;
 }
 
 interface Developer {
@@ -76,7 +79,7 @@ export default function PropertyDetailsPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['highlights', 'overview', 'about', 'pricing', 'amenities', 'connectivity', 'builder', 'faq'];
+      const sections = ['highlights', 'overview', 'about', 'pricing', 'emi', 'amenities', 'connectivity', 'builder', 'faq'];
       const scrollPosition = window.scrollY + 200; // Offset for header + sticky nav
 
       for (const section of sections) {
@@ -211,7 +214,7 @@ export default function PropertyDetailsPage() {
         <div className="flex flex-col xl:flex-row gap-6 relative">
 
           {/* LEFT SIDEBAR - Sticky */}
-          <div className="hidden xl:block w-[120px] 2xl:w-[140px] flex-shrink-0">
+          <div className="hidden xl:block w-[150px] 2xl:w-[170px] flex-shrink-0">
             <div className="sticky top-24 h-fit">
               <PropertyStatsSidebar />
             </div>
@@ -270,7 +273,7 @@ export default function PropertyDetailsPage() {
             {/* Horizontal Sticky Navigation Tabs */}
             <div className="sticky top-24 z-30 bg-white/80 backdrop-blur-md shadow-lg shadow-gray-100 border border-gray-100 -mx-4 px-4 md:mx-0 md:px-2 md:rounded-2xl overflow-x-auto scrollbar-hide py-3">
               <div className="flex whitespace-nowrap min-w-full gap-2 px-1">
-                {['Highlights', 'Overview', 'About', 'Pricing', 'Amenities', 'Connectivity', 'Builder', 'FAQ'].map((item) => {
+                {['Highlights', 'Overview', 'About', 'Pricing', 'EMI', 'Amenities', 'Connectivity', 'Builder', 'FAQ'].map((item) => {
                   const id = item.toLowerCase();
                   const isActive = activeTab === id;
                   return (
@@ -280,8 +283,8 @@ export default function PropertyDetailsPage() {
                       className={`
                         px-5 py-2.5 text-sm font-bold transition-all duration-300 relative rounded-xl
                         ${isActive
-                          ? 'bg-[#1F4B6B] text-white shadow-md shadow-blue-100 scale-105'
-                          : 'text-gray-500 hover:text-[#1F4B6B] hover:bg-gray-50'
+                          ? 'bg-navy-blue text-white shadow-md shadow-brand-teal/20 scale-105'
+                          : 'text-gray-500 hover:text-navy-blue hover:bg-gray-50'
                         }
                       `}
                     >
@@ -297,7 +300,7 @@ export default function PropertyDetailsPage() {
 
             <section id="highlights" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                <div className="w-10 h-10 bg-brand-teal/10 rounded-xl flex items-center justify-center text-brand-teal">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
@@ -306,9 +309,9 @@ export default function PropertyDetailsPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {displayedHighlights.map((highlight, index) => (
-                  <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50/50 border border-transparent hover:border-blue-100 hover:bg-white transition-all group">
+                  <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50/50 border border-transparent hover:border-brand-teal/30 hover:bg-white transition-all group">
                     <div className="mt-1 flex-shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                      <div className="w-6 h-6 rounded-full bg-brand-teal/20 flex items-center justify-center text-brand-teal group-hover:scale-110 transition-transform">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
@@ -322,7 +325,7 @@ export default function PropertyDetailsPage() {
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={() => setShowAllHighlights(!showAllHighlights)}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 hover:text-blue-600 transition-all"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 hover:text-brand-teal transition-all"
                   >
                     <span>{showAllHighlights ? 'View Fewer Highlights' : 'View All Highlights'}</span>
                     <svg className={`w-4 h-4 transition-transform duration-300 ${showAllHighlights ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,7 +339,7 @@ export default function PropertyDetailsPage() {
             {/* Overview Section */}
             <section id="overview" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
@@ -352,14 +355,14 @@ export default function PropertyDetailsPage() {
                   { label: 'Possession Date', value: property.possessionDate || '12-2028', icon: '📅' },
                   { label: 'Project RERA', value: property.projectReraNumber || 'P51900046369', isLink: true, icon: '📜' },
                 ].map((item, idx) => (
-                  <div key={idx} className="group p-5 rounded-2xl bg-gray-50 border border-transparent hover:border-orange-100 hover:bg-white transition-all shadow-sm hover:shadow-md">
+                  <div key={idx} className="group p-5 rounded-2xl bg-gray-50 border border-transparent hover:border-brand-red/30 hover:bg-white transition-all shadow-sm hover:shadow-md">
                     <div className="flex items-center gap-4">
                       <div className="text-3xl grayscale group-hover:grayscale-0 transition-all transform group-hover:scale-110">
                         {item.icon}
                       </div>
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{item.label}</span>
-                        <span className={`font-bold text-lg ${item.isLink ? 'text-blue-600 hover:underline cursor-pointer' : 'text-gray-900'}`}>{item.value}</span>
+                        <span className={`font-bold text-lg ${item.isLink ? 'text-brand-teal hover:underline cursor-pointer' : 'text-gray-900'}`}>{item.value}</span>
                       </div>
                     </div>
                   </div>
@@ -370,7 +373,7 @@ export default function PropertyDetailsPage() {
             {/* About Project */}
             <section id="about" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                <div className="w-10 h-10 bg-navy-blue/10 rounded-xl flex items-center justify-center text-navy-blue">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -379,18 +382,13 @@ export default function PropertyDetailsPage() {
               </div>
               <div className="relative">
                 <div className={`prose max-w-none text-gray-600 leading-relaxed text-lg transition-all duration-500 ${!showFullAbout ? 'max-h-[150px] overflow-hidden' : 'max-h-[2000px]'}`}>
-                  <p className="mb-4">{property.description}</p>
-                  <p>
-                    {property.name} offers spacious {property.bedrooms || 3} BHK apartments in {property.location}.
-                    The project stands tall with modern architecture and is built on an expansive land parcel.
-                  </p>
-                  {!showFullAbout && <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>}
+                  <p className="mb-4 whitespace-pre-line">{property.description}</p>
                 </div>
 
                 <div className="mt-6 flex justify-start">
                   <button
                     onClick={() => setShowFullAbout(!showFullAbout)}
-                    className="flex items-center gap-2 group text-[#1F4B6B] font-bold hover:text-blue-700 transition-all"
+                    className="flex items-center gap-2 group text-navy-blue font-bold hover:text-brand-teal transition-all"
                   >
                     <span>{showFullAbout ? 'Show Less' : 'Read Full Description'}</span>
                     <svg className={`w-5 h-5 transition-transform duration-300 ${showFullAbout ? 'rotate-180' : 'group-hover:translate-y-1'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,13 +396,37 @@ export default function PropertyDetailsPage() {
                     </svg>
                   </button>
                 </div>
+
+                {property.reraQrCode && (
+                  <div className="mt-10 pt-10 border-t border-gray-100">
+                    <div className="flex flex-col md:flex-row items-center gap-8 p-6 rounded-2xl bg-gray-50/50 border border-gray-100">
+                      <div className="w-40 h-40 bg-white p-3 rounded-2xl shadow-sm border border-gray-200 flex-shrink-0 animate-in zoom-in duration-500">
+                        <img
+                          src={property.reraQrCode}
+                          alt="RERA QR Code"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-xl font-bold text-navy-blue mb-2">Authenticated RERA Project</h4>
+                        <p className="text-gray-600 mb-4 font-medium italic">Scan this QR code or use the RERA tracking number {property.projectReraNumber || 'P51900046369'} to verify all project details on the official Mahadera website.</p>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-black uppercase tracking-widest border border-brand-teal/20">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Verified & Secured
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 
             {/* Pricing */}
             <section id="pricing" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <div className="w-10 h-10 bg-brand-teal/10 rounded-xl flex items-center justify-center text-brand-teal">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -418,7 +440,7 @@ export default function PropertyDetailsPage() {
                     key={type}
                     onClick={() => setPricingFilter(type)}
                     className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${pricingFilter === type
-                      ? 'bg-[#1F4B6B] text-white shadow-lg shadow-blue-200 scale-105'
+                      ? 'bg-navy-blue text-white shadow-lg shadow-brand-teal/20 scale-105'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                   >
@@ -439,18 +461,18 @@ export default function PropertyDetailsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filteredPricing.map((item, index) => (
-                      <tr key={index} className="hover:bg-blue-50/30 transition-colors group">
+                      <tr key={index} className="hover:bg-brand-teal/5 transition-colors group">
                         <td className="px-6 py-5">
-                          <span className="font-bold text-gray-900 group-hover:text-[#1F4B6B] transition-colors">{item.type}</span>
+                          <span className="font-bold text-gray-900 group-hover:text-navy-blue transition-colors">{item.type}</span>
                         </td>
                         <td className="px-6 py-5">
                           <span className="text-gray-600 font-medium">{item.carpetArea}</span>
                         </td>
                         <td className="px-6 py-5">
-                          <span className="text-lg font-black text-[#1F4B6B]">{item.price}</span>
+                          <span className="text-lg font-black text-navy-blue">{item.price}</span>
                         </td>
                         <td className="px-6 py-5 text-right">
-                          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-bold text-blue-600 hover:bg-blue-600 hover:text-white hover:border-transparent transition-all shadow-sm">
+                          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-bold text-brand-teal hover:bg-brand-teal hover:text-white hover:border-transparent transition-all shadow-sm">
                             <span>Price Breakup</span>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -464,55 +486,34 @@ export default function PropertyDetailsPage() {
               </div>
             </section>
 
+            {/* EMI Calculator Section */}
+            <section id="emi" className="scroll-mt-36">
+              <EmiCalculator defaultLoanAmount={property.price} />
+            </section>
+
             {/* Amenities Section */}
             <section id="amenities" className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm scroll-mt-36">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-[#1F4B6B]">Amenities</h2>
+                <h2 className="text-2xl font-bold text-navy-blue">Amenities</h2>
               </div>
 
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100 italic">External Amenities</h3>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-4">
-                  {[
-                    { name: 'Swimming Pool', icon: '🏊' },
-                    { name: 'Club House', icon: '🏛️' },
-                    { name: 'Kids Play Area', icon: '🛝' },
-                    { name: 'Garden', icon: '🌳' },
-                    { name: 'Multi Purpose Court', icon: '🏀' },
-                    { name: 'Golf Course', icon: '⛳' },
-                    { name: 'Senior Citizen Area', icon: '👴' },
-                    { name: 'Squash Court', icon: '🎾' },
-                    { name: 'Pets Walking Area', icon: '🐾' },
-                    { name: 'Multi Purpose Lawn', icon: '🌱' },
-                    { name: 'Box Cricket', icon: '🏏' },
-                    { name: 'Library', icon: '📚' },
-                    { name: 'Open Gym', icon: '🏋️' },
-                    { name: 'Amphitheater', icon: '🎭' },
-                    { name: 'Banquet Hall', icon: '🎊' },
-                    { name: 'Toddlers Play Area', icon: '🧸' },
-                    { name: 'Seating Area', icon: '🪑' },
-                    { name: 'Creche Outdoor Play Area', icon: '🎈' },
-                    { name: 'Table Tennis', icon: '🏓' },
-                    { name: 'Pet Park', icon: '🐶' },
-                    { name: 'Indoor games', icon: '🎲' },
-                    { name: 'Star Gazing', icon: '✨' },
-                    { name: 'Badminton Court', icon: '🏸' },
-                    { name: 'Skating Ring', icon: '⛸️' },
-                    { name: 'Gymnasium', icon: '💪' },
-                    { name: 'Mini Theatre', icon: '🎬' },
-                    { name: 'Multi purpose hall', icon: '🏢' },
-                  ].map((amenity, index) => (
+                  {EXTERNAL_AMENITIES.filter(amenity => property.amenities?.includes(amenity.name)).map((amenity, index) => (
                     <div key={index} className="flex items-center gap-3 group transition-all duration-300 hover:translate-x-1">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 text-[#1F4B6B] group-hover:bg-[#1F4B6B] group-hover:text-white transition-colors border border-gray-100 text-xl shadow-sm">
-                        {/* Placeholder for SVG icons from the image - using high-quality emojis/font-based icons for now */}
+                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 text-navy-blue group-hover:bg-navy-blue group-hover:text-white transition-colors border border-gray-100 text-xl shadow-sm">
                         <span>{amenity.icon}</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-600 group-hover:text-[#1F4B6B] transition-colors">
+                      <span className="text-sm font-medium text-gray-600 group-hover:text-navy-blue transition-colors">
                         {amenity.name}
                       </span>
                     </div>
                   ))}
+                  {(!property.amenities || property.amenities.length === 0) && (
+                    <div className="col-span-full text-gray-500 italic">No external amenities listed.</div>
+                  )}
                 </div>
               </div>
             </section>
@@ -520,7 +521,7 @@ export default function PropertyDetailsPage() {
             {/* Connectivity */}
             <section id="connectivity" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600">
+                <div className="w-10 h-10 bg-brand-teal/10 rounded-xl flex items-center justify-center text-brand-teal">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -543,7 +544,7 @@ export default function PropertyDetailsPage() {
                     </p>
                   </div>
 
-                  <button className="mt-6 w-full py-4 rounded-xl bg-[#1F4B6B] text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
+                  <button className="mt-6 w-full py-4 rounded-xl bg-navy-blue text-white font-bold hover:bg-brand-teal transition-all shadow-lg shadow-brand-teal/20 flex items-center justify-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 7m0 10V7" />
                     </svg>
@@ -560,12 +561,12 @@ export default function PropertyDetailsPage() {
                       { name: 'Hospital', distance: '0.8 km' },
                       { name: 'School', distance: '1.5 km' }
                     ]).map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-transparent hover:border-teal-100 hover:bg-white transition-all group">
+                      <div key={idx} className="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-transparent hover:border-brand-teal/30 hover:bg-white transition-all group">
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full bg-teal-400 group-hover:scale-150 transition-transform"></div>
                           <span className="text-gray-700 font-bold">{item.name}</span>
                         </div>
-                        <span className="px-3 py-1 rounded-full bg-white text-teal-600 text-xs font-black shadow-sm border border-gray-100">
+                        <span className="px-3 py-1 rounded-full bg-white text-brand-teal text-xs font-black shadow-sm border border-gray-100">
                           {item.distance}
                         </span>
                       </div>
@@ -578,7 +579,7 @@ export default function PropertyDetailsPage() {
             {/* About Developer */}
             <section id="builder" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
+                <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
@@ -595,14 +596,14 @@ export default function PropertyDetailsPage() {
                           <img src={developer.logo} alt={developer.name} className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500" />
                         </div>
                       ) : (
-                        <div className="absolute inset-0 bg-[#1F4B6B] rounded-3xl shadow-xl flex items-center justify-center text-white text-6xl font-black group-hover:rotate-6 transition-transform duration-500">
+                        <div className="absolute inset-0 bg-navy-blue rounded-3xl shadow-xl flex items-center justify-center text-white text-6xl font-black group-hover:rotate-6 transition-transform duration-500">
                           {developer?.name?.[0] || 'D'}
                         </div>
                       )}
                     </div>
                     <h3 className="text-2xl font-black text-gray-900 text-center mb-2">{developer?.name || property.developer}</h3>
                     {developer?.establishedYear && (
-                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-widest">
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-red/10 text-brand-red text-xs font-black uppercase tracking-widest">
                         <span>Established In {developer.establishedYear}</span>
                       </div>
                     )}
@@ -616,15 +617,15 @@ export default function PropertyDetailsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
                         <div className="text-xs font-bold text-gray-400 uppercase mb-1">Experience</div>
-                        <div className="text-2xl font-black text-[#1F4B6B]">15+ Years</div>
+                        <div className="text-2xl font-black text-navy-blue">15+ Years</div>
                       </div>
                       <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
                         <div className="text-xs font-bold text-gray-400 uppercase mb-1">Projects</div>
-                        <div className="text-2xl font-black text-[#1F4B6B]">45+ Delivered</div>
+                        <div className="text-2xl font-black text-navy-blue">45+ Delivered</div>
                       </div>
                     </div>
 
-                    <button className="flex items-center gap-2 group text-[#1F4B6B] font-bold hover:gap-4 transition-all">
+                    <button className="flex items-center gap-2 group text-navy-blue font-bold hover:gap-4 transition-all">
                       <span>More about this developer</span>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -638,7 +639,7 @@ export default function PropertyDetailsPage() {
             {/* FAQ Section */}
             <section id="faq" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center text-yellow-600">
+                <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -656,10 +657,10 @@ export default function PropertyDetailsPage() {
                   <div key={idx} className="border border-gray-100 rounded-2xl overflow-hidden group">
                     <button
                       onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                      className={`w-full flex items-center justify-between p-5 text-left transition-all ${expandedFaq === idx ? 'bg-blue-50/50' : 'bg-white hover:bg-gray-50'}`}
+                      className={`w-full flex items-center justify-between p-5 text-left transition-all ${expandedFaq === idx ? 'bg-brand-teal/5' : 'bg-white hover:bg-gray-50'}`}
                     >
-                      <span className={`font-bold text-lg ${expandedFaq === idx ? 'text-[#1F4B6B]' : 'text-gray-700'}`}>{faq.q}</span>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${expandedFaq === idx ? 'bg-[#1F4B6B] text-white rotate-180' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'}`}>
+                      <span className={`font-bold text-lg ${expandedFaq === idx ? 'text-navy-blue' : 'text-gray-700'}`}>{faq.q}</span>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${expandedFaq === idx ? 'bg-navy-blue text-white rotate-180' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'}`}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -680,24 +681,24 @@ export default function PropertyDetailsPage() {
           {/* RIGHT SIDEBAR - Sticky */}
           <div className="hidden lg:block w-[320px] 2xl:w-[350px] flex-shrink-0">
             <div className="sticky top-24 h-fit">
-              <PropertyContactSidebar />
+              <PropertyContactSidebar propertyName={property.name} />
             </div>
           </div>
 
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* Mobile Sticky Bottom Action Bar (Only visible on small screens where sidebars are hidden) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-2xl z-50 flex gap-4">
-        <button className="flex-1 bg-white border border-[#1F4B6B] text-[#1F4B6B] py-3 rounded-lg font-bold">
+      < div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-2xl z-50 flex gap-4" >
+        <button className="flex-1 bg-white border border-navy-blue text-navy-blue py-3 rounded-lg font-bold">
           Call Now
         </button>
-        <button className="flex-1 bg-[#1F4B6B] text-white py-3 rounded-lg font-bold">
+        <button className="flex-1 bg-navy-blue text-white py-3 rounded-lg font-bold">
           Book Visit
         </button>
-      </div>
+      </div >
 
       <Footer />
-    </div>
+    </div >
   );
 }

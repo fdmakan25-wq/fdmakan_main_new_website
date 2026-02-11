@@ -113,6 +113,7 @@ export async function PUT(
     if (specifications !== undefined) updateData.specifications = specifications;
     // Connectivity
     if (connectivity !== undefined) updateData.connectivity = connectivity;
+    if (body.reraQrCode !== undefined) updateData.reraQrCode = body.reraQrCode;
 
     const result = await db.collection('properties').updateOne(
       { _id: new ObjectId(params.id) },

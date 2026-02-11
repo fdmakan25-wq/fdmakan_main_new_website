@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDatabase();
     const properties = await db.collection('properties').find({}).sort({ createdAt: -1 }).toArray();
-    
+
     return NextResponse.json(properties, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching properties:', error);
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       specifications,
       // Connectivity
       connectivity,
+      reraQrCode,
     } = body;
 
     // Validate required fields with specific error messages
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
       specifications: specifications || undefined,
       // Connectivity
       connectivity: connectivity || undefined,
+      reraQrCode: reraQrCode || undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
