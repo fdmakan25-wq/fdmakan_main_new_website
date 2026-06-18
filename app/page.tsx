@@ -31,7 +31,7 @@ export default function Home() {
       <div id="hero">
         <Hero />
       </div>
-      <div className="lg:pl-[200px]">
+      <div className="lg:pl-[200px] relative z-10 bg-white">
         <div id="top-selling">
           <TopSellingProjects />
         </div>

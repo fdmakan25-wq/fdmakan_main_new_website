@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export default function AboutSection() {
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section className="py-14 bg-white relative overflow-hidden">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Side - Images */}
@@ -41,20 +41,16 @@ export default function AboutSection() {
           {/* Right Side - Content */}
           <div className="space-y-6">
             {/* About Us Label */}
-            <div className="inline-block">
-              <span className="bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wide">
-                About Us
-              </span>
+            <div className="inline-flex items-center gap-2">
+              <span className="type-section-label">About Our Company</span>
             </div>
 
-            {/* Main Heading */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-              The Leading Real Estate Rental Marketplace<span className="text-brand-red">.</span>
+            <h2 className="type-display-sm max-w-xl">
+              The Leading Real Estate Rental Marketplace<span className="text-accent-orange">.</span>
             </h2>
 
-            {/* Description */}
-            <p className="text-gray-600 text-lg leading-relaxed">
-              Over 39,000 people work for us in more than 70 countries all over the This breadth of global coverage, combined with specialist services
+            <p className="type-body max-w-xl">
+              Over 39,000 people work for us in more than 70 countries all over the world. This breadth of global coverage, combined with specialist services
             </p>
 
             {/* Features Grid */}

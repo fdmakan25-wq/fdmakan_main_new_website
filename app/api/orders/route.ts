@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
+import { sendEnquiryEmail, EnquiryType } from '@/lib/send-enquiry-email';
+
+function getOrderPrefix(type: string) {
+  if (type === 'call_back') return 'CB';
+  if (type === 'site_visit') return 'SV';
+  if (type === 'presentation') return 'PR';
+  if (type === 'contact') return 'CF';
+  return 'ORD';
+}
 
 // GET - Fetch all orders (with optional status filter)
 export async function GET(request: NextRequest) {
@@ -26,13 +35,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new enquiry/order
+// POST - Create a new enquiry/order and email via Resend
 export async function POST(request: NextRequest) {
   try {
     const db = await getDatabase();
     const data = await request.json();
 
-    // Basic validation
     if (!data.type || !data.customer) {
       return NextResponse.json(
         { error: 'Invalid data', message: 'Type and customer details are required' },
@@ -40,10 +48,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a unique identifier for the inquiry
-    const prefix = data.type === 'call_back' ? 'CB' : data.type === 'site_visit' ? 'SV' : 'ORD';
+    const prefix = getOrderPrefix(data.type);
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `${prefix}-${Date.now().toString().slice(-4)}${randomNum}`;
+
+    const propertyName = data.items?.[0]?.property || data.propertyName;
+    const enquiryType = data.type as EnquiryType;
 
     const newEnquiry = {
       ...data,
@@ -54,8 +64,36 @@ export async function POST(request: NextRequest) {
 
     const result = await db.collection('orders').insertOne(newEnquiry);
 
+    const emailResult = await sendEnquiryEmail({
+      type: enquiryType,
+      orderNumber,
+      propertyName,
+      customerName: data.customer?.name,
+      customerEmail: data.customer?.email,
+      customerPhone: data.customer?.phone,
+      visitDate: data.metadata?.date,
+      rideType: data.metadata?.rideType,
+      subject: data.subject,
+      message: data.message || data.notes,
+      notes: data.notes,
+    });
+
+    if (!emailResult.sent) {
+      console.warn('Enquiry saved but email not sent:', emailResult.error);
+    }
+
     return NextResponse.json(
-      { message: 'Inquiry submitted successfully', id: result.insertedId, orderNumber },
+      {
+        message: emailResult.sent
+          ? 'Inquiry submitted successfully'
+          : 'Inquiry saved. Email delivery is pending — our team will still follow up.',
+        id: result.insertedId,
+        orderNumber,
+        emailSent: emailResult.sent,
+        ...(process.env.NODE_ENV === 'development' && !emailResult.sent
+          ? { emailError: emailResult.error }
+          : {}),
+      },
       { status: 201 }
     );
   } catch (error: any) {

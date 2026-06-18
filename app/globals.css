@@ -4,23 +4,198 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0F172A;
+  --text-body: #4B5563;
+  --text-muted: #6B7280;
+  --accent-orange: #FF5722;
+  --surface-muted: #F3F4F6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    font-family: var(--font-inter), Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    color: var(--text-body);
+    background: var(--background);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  h1 {
+    color: var(--foreground);
+    font-size: 2.5rem;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+  }
+
+  @media (min-width: 768px) {
+    h1 {
+      font-size: 3.5rem;
+    }
+  }
+
+  h2 {
+    color: var(--foreground);
+    font-size: 1.875rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+
+  @media (min-width: 768px) {
+    h2 {
+      font-size: 2.25rem;
+    }
+  }
+
+  h3 {
+    color: var(--foreground);
+    font-size: 1.75rem;
+    line-height: 1.25;
+    font-weight: 700;
+  }
+
+  h4 {
+    color: var(--foreground);
+    font-size: 1.5rem;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  h5, h6 {
+    color: var(--foreground);
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  p {
+    color: var(--text-body);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  a {
+    font-weight: 500;
+  }
+
+  label {
+    color: var(--text-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  small {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  button {
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  input,
+  textarea,
+  select {
+    color: var(--foreground);
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #9CA3AF;
+    font-weight: 400;
+  }
+
+  th {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  td {
+    color: var(--text-body);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  strong, b {
+    color: var(--foreground);
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  /* Section eyebrow — matches reference "ABOUT OUR COMPANY" */
+  .type-section-label {
+    @apply text-label-sm uppercase text-accent-orange font-bold tracking-widest;
+  }
+
+  /* Hero / page titles */
+  .type-display {
+    @apply text-display-2 md:text-[3.5rem] text-ink font-extrabold leading-[1.12] tracking-tight;
+  }
+
+  .type-display-sm {
+    @apply text-display-1 text-ink font-extrabold leading-[1.15] tracking-tight;
+  }
+
+  /* Section headings */
+  .type-heading {
+    @apply text-heading-1 md:text-[2.25rem] text-ink font-bold leading-tight tracking-tight;
+  }
+
+  .type-subheading {
+    @apply text-heading-2 text-ink font-bold leading-snug;
+  }
+
+  /* Body copy */
+  .type-body {
+    @apply text-body-lg text-body-text font-normal leading-relaxed;
+  }
+
+  .type-body-sm {
+    @apply text-body-md text-body-text font-normal leading-relaxed;
+  }
+
+  /* Contact / emphasis numbers */
+  .type-emphasis {
+    @apply text-2xl text-ink font-bold leading-tight;
+  }
+
+  /* Pill tab text (reference mission/vision tabs) */
+  .type-tab {
+    @apply text-base font-semibold;
+  }
+
+  /* Nav links */
+  .type-nav {
+    @apply text-base font-medium text-gray-700;
+  }
+
+  /* CTA buttons text */
+  .type-cta {
+    @apply text-base font-bold text-white;
   }
 }
 
 body {
-  color: var(--foreground);
+  color: var(--text-body);
   background: var(--background);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
 }
 
 .glass-morphism {
@@ -122,6 +297,16 @@ body {
   will-change: transform;
 }
 
+.animate-scroll-left-slow {
+  animation: scroll-left 18s linear infinite;
+  display: flex;
+  will-change: transform;
+}
+
+.top-picks-track:hover {
+  animation-play-state: paused;
+}
+
 .hero-text-delay-2 {
   animation: fadeDown 1s ease-out 0.4s forwards;
   opacity: 0;
@@ -174,7 +359,7 @@ select {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #c63f2b 0%, #1a365d 100%);
+  background: linear-gradient(135deg, #FF5722 0%, #0F172A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface Blog {
   _id?: string;
@@ -89,17 +91,26 @@ export default function RecentBlogs() {
 
   const currentBlog = blogs[currentIndex];
 
+  const blogHref = (blog: Blog) => (blog._id ? `/blogs/${blog._id}` : '/blogs');
+
   return (
-    <section className="py-24 bg-white">
+    <section className="py-14 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Heading */}
-        <div className="mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            Recent Blogs
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Stay updated with the latest insights and trends in real estate.
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+              Recent Blogs
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Stay updated with the latest insights and trends in real estate.
+            </p>
+          </div>
+          <Link href="/blogs" className="inline-flex items-center gap-2 text-brand-teal font-bold hover:text-brand-red transition text-sm shrink-0">
+            View All Blogs
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
         </div>
 
         {/* Main Content Area */}
@@ -156,37 +167,33 @@ export default function RecentBlogs() {
                       {blogs[(currentIndex - 1 + blogs.length) % blogs.length].date}
                     </div>
                   </div>
-                  <button className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm">
+                  <Link
+                    href={blogHref(blogs[(currentIndex - 1 + blogs.length) % blogs.length])}
+                    className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm text-center block"
+                  >
                     Read More
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
 
             {/* Central Large Image */}
             <div className="lg:col-span-6 relative">
-              <div className="relative h-[300px] rounded-2xl overflow-hidden shadow-2xl">
-                {/* Main Image - Current Blog */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
-                  <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                    <div className="text-center text-white/50">
-                      <svg className="w-48 h-48 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm">Blog Image</p>
-                    </div>
-                  </div>
-                  {/* Text Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 flex flex-col justify-end">
-                    <h3 className="font-bold text-white text-xl md:text-2xl leading-tight mb-3 line-clamp-2">
-                      {currentBlog.title}
-                    </h3>
-                    <p className="text-white/90 text-sm leading-relaxed line-clamp-3">
-                      {currentBlog.excerpt}
-                    </p>
-                  </div>
+              <Link href={blogHref(currentBlog)} className="block relative h-[300px] rounded-2xl overflow-hidden shadow-2xl group">
+                {currentBlog.image ? (
+                  <Image src={currentBlog.image} alt={currentBlog.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="50vw" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 flex flex-col justify-end">
+                  <h3 className="font-bold text-white text-xl md:text-2xl leading-tight mb-3 line-clamp-2">
+                    {currentBlog.title}
+                  </h3>
+                  <p className="text-white/90 text-sm leading-relaxed line-clamp-3">
+                    {currentBlog.excerpt}
+                  </p>
                 </div>
-              </div>
+              </Link>
 
               {/* Top Right Thumbnail */}
               <div className="absolute top-4 right-4 bg-white rounded-lg shadow-xl p-2 z-10 max-w-[120px]">
@@ -254,9 +261,12 @@ export default function RecentBlogs() {
                       {blogs[(currentIndex + 1) % blogs.length].date}
                     </div>
                   </div>
-                  <button className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm">
+                  <Link
+                    href={blogHref(blogs[(currentIndex + 1) % blogs.length])}
+                    className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm text-center block"
+                  >
                     Read More
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

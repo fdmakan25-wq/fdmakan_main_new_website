@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { EXTERNAL_AMENITIES } from '@/lib/constants';
+import {
+  STRUCTURE_QUALITY_OPTIONS,
+  LIVING_DINING_FLOORING_OPTIONS,
+  BATHROOM_FLOORING_OPTIONS,
+  KITCHEN_FLOORING_OPTIONS,
+  BATHROOM_FITTING_OPTIONS,
+  DOOR_OPTIONS,
+  WINDOW_OPTIONS,
+} from '@/lib/specification-options';
 
 interface Property {
   _id: string;
@@ -41,9 +50,9 @@ interface Property {
   facilities?: string[];
   // Specifications
   specifications?: {
+    structureQuality?: string;
     floor?: { [key: string]: string };
     fitting?: { [key: string]: string };
-    wallCeiling?: { [key: string]: string };
   };
   // Connectivity
   connectivity?: {
@@ -235,7 +244,7 @@ export default function PropertiesTab() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-3">
                         <button
-                          onClick={() => window.open(`/properties/${property._id}`, '_blank')}
+                          onClick={() => window.open(`/view-details/${property._id}`, '_blank')}
                           className="text-brand-teal hover:text-brand-teal-dark"
                           title="View"
                         >
@@ -303,9 +312,6 @@ function PropertyFormModal({
     price: property?.price || 0,
     developer: property?.developer || '',
     location: property?.location || '',
-    bedrooms: property?.bedrooms || 0,
-    bathrooms: property?.bathrooms || 0,
-    area: property?.area || 0,
     available: property?.available ?? true,
     images: property?.images || [],
     videos: property?.videos || [],
@@ -329,9 +335,9 @@ function PropertyFormModal({
     facilities: property?.facilities || [],
     // Specifications
     specifications: property?.specifications || {
+      structureQuality: '',
       floor: {},
       fitting: {},
-      wallCeiling: {},
     },
     // Connectivity
     connectivity: property?.connectivity || {
@@ -346,7 +352,40 @@ function PropertyFormModal({
   const [highlightInput, setHighlightInput] = useState('');
   // const [amenityInput, setAmenityInput] = useState(''); // Removed in favor of checkboxes
   const [facilityInput, setFacilityInput] = useState('');
-  const [pricingInput, setPricingInput] = useState({ type: '', carpetArea: '', price: '' });
+  const [pricingInput, setPricingInput] = useState({
+    bhkCount: '2',
+    unitType: 'BHK' as 'BHK' | 'RK',
+    areaValue: '',
+    areaUnit: 'Sq.ft' as 'Sq.ft' | 'Sq.m',
+    price: '',
+  });
+
+  const formatPriceWithRupee = (value: string) => {
+    const cleaned = value.replace(/[₹,\s]/g, '').trim();
+    if (!cleaned) return '';
+    return `₹ ${cleaned}`;
+  };
+
+  const addPricingEntry = () => {
+    if (!pricingInput.areaValue || !pricingInput.price) {
+      alert('Please enter area and price');
+      return;
+    }
+    const type = `${pricingInput.bhkCount} ${pricingInput.unitType}`;
+    const carpetArea = `${pricingInput.areaValue} ${pricingInput.areaUnit}`;
+    const price = formatPriceWithRupee(pricingInput.price);
+    setFormData({
+      ...formData,
+      pricing: [...formData.pricing, { type, carpetArea, price }],
+    });
+    setPricingInput({
+      bhkCount: '2',
+      unitType: 'BHK',
+      areaValue: '',
+      areaUnit: 'Sq.ft',
+      price: '',
+    });
+  };
   const [connectivityInput, setConnectivityInput] = useState({ category: 'commute', name: '', distance: '', time: '' });
 
   const [submitting, setSubmitting] = useState(false);
@@ -416,9 +455,6 @@ function PropertyFormModal({
       const submitData = {
         ...formData,
         price: finalPrice > 0 ? parseFloat(finalPrice.toString()) : 0,
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms.toString()) : undefined,
-        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms.toString()) : undefined,
-        area: formData.area ? parseInt(formData.area.toString()) : undefined,
       };
 
       const response = await fetch(url, {
@@ -526,43 +562,6 @@ function PropertyFormModal({
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
               />
-            </div>
-          </div>
-
-          {/* Property Details */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.bedrooms}
-                  onChange={(e) => setFormData({ ...formData, bedrooms: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.bathrooms}
-                  onChange={(e) => setFormData({ ...formData, bathrooms: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Area (sqft)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.area}
-                  onChange={(e) => setFormData({ ...formData, area: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-              </div>
             </div>
           </div>
 
@@ -818,45 +817,75 @@ function PropertyFormModal({
 
           {/* Pricing Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Floor Plans</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Pricing & Floor Plans</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Add each configuration (BHK or RK) with carpet area and price. At least one entry is required.
+            </p>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input
-                  type="text"
-                  placeholder="Type (e.g., 2 BHK)"
-                  value={pricingInput.type}
-                  onChange={(e) => setPricingInput({ ...pricingInput, type: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Carpet Area (e.g., 687 Sq.ft)"
-                  value={pricingInput.carpetArea}
-                  onChange={(e) => setPricingInput({ ...pricingInput, carpetArea: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Price (e.g., ₹ 2.75 Cr)"
-                    value={pricingInput.price}
-                    onChange={(e) => setPricingInput({ ...pricingInput, price: e.target.value })}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Configuration</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={pricingInput.bhkCount}
+                      onChange={(e) => setPricingInput({ ...pricingInput, bhkCount: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white text-sm"
+                    >
+                      {['1', '2', '3', '4', '5', '6'].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={pricingInput.unitType}
+                      onChange={(e) => setPricingInput({ ...pricingInput, unitType: e.target.value as 'BHK' | 'RK' })}
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white text-sm font-semibold"
+                    >
+                      <option value="BHK">BHK</option>
+                      <option value="RK">RK</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Carpet Area</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Area"
+                      value={pricingInput.areaValue}
+                      onChange={(e) => setPricingInput({ ...pricingInput, areaValue: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white text-sm"
+                    />
+                    <select
+                      value={pricingInput.areaUnit}
+                      onChange={(e) => setPricingInput({ ...pricingInput, areaUnit: e.target.value as 'Sq.ft' | 'Sq.m' })}
+                      className="w-24 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white text-sm"
+                    >
+                      <option value="Sq.ft">Sq.ft</option>
+                      <option value="Sq.m">Sq.m</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Price</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                    <input
+                      type="text"
+                      placeholder="2.75 Cr or 75 Lakh"
+                      value={pricingInput.price}
+                      onChange={(e) => setPricingInput({ ...pricingInput, price: e.target.value.replace(/[₹\s]/g, '') })}
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-end">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (pricingInput.type && pricingInput.carpetArea && pricingInput.price) {
-                        setFormData({
-                          ...formData,
-                          pricing: [...formData.pricing, { ...pricingInput }],
-                        });
-                        setPricingInput({ type: '', carpetArea: '', price: '' });
-                      }
-                    }}
-                    className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition"
+                    onClick={addPricingEntry}
+                    className="w-full px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition font-semibold text-sm"
                   >
-                    Add
+                    + Add Plan
                   </button>
                 </div>
               </div>
@@ -992,15 +1021,38 @@ function PropertyFormModal({
           {/* Specifications Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
+            <p className="text-sm text-gray-500 mb-4">Select standard Indian market specifications from the dropdowns below.</p>
             <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Structure Quality</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Structure Type</label>
+                    <select
+                      value={formData.specifications.structureQuality || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        specifications: {
+                          ...formData.specifications,
+                          structureQuality: e.target.value,
+                        },
+                      })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="">Select structure quality</option>
+                      {STRUCTURE_QUALITY_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Floor</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Living & Dining Flooring</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Vitrified Tiles"
+                    <select
                       value={formData.specifications.floor?.['livingDining'] || ''}
                       onChange={(e) => setFormData({
                         ...formData,
@@ -1010,13 +1062,16 @@ function PropertyFormModal({
                         },
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
+                    >
+                      <option value="">Select flooring</option>
+                      {LIVING_DINING_FLOORING_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Bathroom/Utility Area</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Anti Skid Vitrified Flooring"
+                    <select
                       value={formData.specifications.floor?.['bathroomUtility'] || ''}
                       onChange={(e) => setFormData({
                         ...formData,
@@ -1026,13 +1081,16 @@ function PropertyFormModal({
                         },
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
+                    >
+                      <option value="">Select flooring</option>
+                      {BATHROOM_FLOORING_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Kitchen</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Vitrified Tiles"
+                    <select
                       value={formData.specifications.floor?.['kitchen'] || ''}
                       onChange={(e) => setFormData({
                         ...formData,
@@ -1042,7 +1100,12 @@ function PropertyFormModal({
                         },
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
+                    >
+                      <option value="">Select flooring</option>
+                      {KITCHEN_FLOORING_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1051,9 +1114,7 @@ function PropertyFormModal({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Bathroom</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Premium Quality Sanitary Wares"
+                    <select
                       value={formData.specifications.fitting?.['bathroom'] || ''}
                       onChange={(e) => setFormData({
                         ...formData,
@@ -1063,13 +1124,16 @@ function PropertyFormModal({
                         },
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
+                    >
+                      <option value="">Select fittings</option>
+                      {BATHROOM_FITTING_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Door</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Flush Door"
+                    <select
                       value={formData.specifications.fitting?.['door'] || ''}
                       onChange={(e) => setFormData({
                         ...formData,
@@ -1079,13 +1143,16 @@ function PropertyFormModal({
                         },
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
+                    >
+                      <option value="">Select door type</option>
+                      {DOOR_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Windows</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Aluminium Sliding Windows"
+                    <select
                       value={formData.specifications.fitting?.['windows'] || ''}
                       onChange={(e) => setFormData({
                         ...formData,
@@ -1095,60 +1162,12 @@ function PropertyFormModal({
                         },
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Wall & Ceiling</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Structure</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Earthquake Resistant RCC"
-                      value={formData.specifications.wallCeiling?.['structure'] || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        specifications: {
-                          ...formData.specifications,
-                          wallCeiling: { ...formData.specifications.wallCeiling, structure: e.target.value },
-                        },
-                      })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Painting</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Oil Bound Distember"
-                      value={formData.specifications.wallCeiling?.['painting'] || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        specifications: {
-                          ...formData.specifications,
-                          wallCeiling: { ...formData.specifications.wallCeiling, painting: e.target.value },
-                        },
-                      })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Walls & Ceiling</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., POP/Gypsum Finish"
-                      value={formData.specifications.wallCeiling?.['wallsCeiling'] || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        specifications: {
-                          ...formData.specifications,
-                          wallCeiling: { ...formData.specifications.wallCeiling, wallsCeiling: e.target.value },
-                        },
-                      })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    />
+                    >
+                      <option value="">Select window type</option>
+                      {WINDOW_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

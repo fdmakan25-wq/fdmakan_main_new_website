@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const folder = (formData.get('folder') as string) || 'fdmakan/properties';
 
     if (!file) {
       return NextResponse.json(
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload to Cloudinary
-    const imageUrl = await uploadImage(file, 'fdmakan/properties');
+    const imageUrl = await uploadImage(file, folder);
 
     return NextResponse.json(
       { success: true, url: imageUrl },

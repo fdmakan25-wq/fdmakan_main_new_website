@@ -5,6 +5,7 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri: string = process.env.MONGODB_URI;
+const dbName: string = process.env.MONGODB_DB_NAME || 'fdmakan';
 const options = {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 5000,
@@ -21,11 +22,13 @@ if (process.env.NODE_ENV === 'development') {
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   let globalWithMongo = global as typeof globalThis & {
     _mongoClientPromise?: Promise<MongoClient>;
+    _mongoUri?: string;
   };
 
-  if (!globalWithMongo._mongoClientPromise) {
+  if (!globalWithMongo._mongoClientPromise || globalWithMongo._mongoUri !== uri) {
     client = new MongoClient(uri, options);
     globalWithMongo._mongoClientPromise = client.connect();
+    globalWithMongo._mongoUri = uri;
   }
   clientPromise = globalWithMongo._mongoClientPromise;
 } else {
@@ -43,8 +46,8 @@ export async function getDatabase(): Promise<Db> {
   try {
     const client = await clientPromise;
     // Test connection
-    await client.db().admin().ping();
-    return client.db();
+    await client.db(dbName).admin().ping();
+    return client.db(dbName);
   } catch (error) {
     console.error('MongoDB connection error:', error);
     throw error;

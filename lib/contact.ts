@@ -1,0 +1,9 @@
+export const CONTACT_PHONE = '7045190486';
+export const CONTACT_PHONE_DISPLAY = '+91 70451 90486';
+export const CONTACT_PHONE_TEL = `+91${CONTACT_PHONE}`;
+export const CONTACT_WHATSAPP_URL = `https://wa.me/91${CONTACT_PHONE}`;
+export const CONTACT_OFFICE = 'Office No. 911';
+export const CONTACT_BUILDING = 'Niharika Mirage, Sector-10';
+export const CONTACT_CITY = 'Kharghar, Navi Mumbai - 410210';
+export const CONTACT_ADDRESS = `${CONTACT_OFFICE}, ${CONTACT_BUILDING}, ${CONTACT_CITY}`;
+export const CONTACT_MAPS_URL = 'https://maps.app.goo.gl/iVGbTEparcxGs98B7';

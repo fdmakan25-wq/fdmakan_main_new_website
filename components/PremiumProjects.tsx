@@ -115,7 +115,7 @@ export default function PremiumProjects() {
   const bottomProjects = allProjects.slice(2, 5);
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-14 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Heading */}
         <div className="mb-12">

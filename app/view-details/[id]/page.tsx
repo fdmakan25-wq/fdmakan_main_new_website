@@ -36,9 +36,9 @@ interface Property {
   amenities?: string[];
   facilities?: string[];
   specifications?: {
+    structureQuality?: string;
     floor?: { [key: string]: string };
     fitting?: { [key: string]: string };
-    wallCeiling?: { [key: string]: string };
   };
   connectivity?: {
     commute?: Array<{ name: string; distance: string; time: string }>;
@@ -177,7 +177,7 @@ export default function PropertyDetailsPage() {
 
   // Default highlights if not provided
   const defaultHighlights = property.highlights || [
-    `Well-appointed ${property.bedrooms || 3} BHK apartments featuring private decks`,
+    `Well-appointed apartments featuring private decks`,
     `Located in ${property.location}`,
     `Premium location with excellent connectivity`,
     `Expansive project offering breathtaking views`,
@@ -195,27 +195,37 @@ export default function PropertyDetailsPage() {
   const defaultAmenities = property.amenities || ['Swimming Pool', 'Gymnasium', 'Clubhouse', 'Parking', 'Security'];
   const defaultFacilities = property.facilities || ['Lift', 'Gas Pipeline', 'Power Back Up', 'Parking', 'Security System'];
 
-  // Default pricing data
-  const defaultPricing = property.pricing || [
-    { type: '2 BHK', carpetArea: `${property.area ? Math.floor(property.area * 0.6) : 687} Sq.ft`, price: `₹ ${((property.price * 0.8) / 10000000).toFixed(2)} Cr` },
-    { type: '3 BHK', carpetArea: `${property.area || 1041} Sq.ft`, price: `₹ ${(property.price / 10000000).toFixed(2)} Cr` },
-  ];
+  const pricingList = property.pricing && property.pricing.length > 0
+    ? property.pricing
+    : property.price > 0
+      ? [{
+          type: 'Standard',
+          carpetArea: '—',
+          price: `₹ ${(property.price / 10000000).toFixed(2)} Cr`,
+        }]
+      : [];
+
+  const pricingFilterOptions = ['all', ...Array.from(new Set(pricingList.map((p) => p.type).filter(Boolean)))];
 
   const filteredPricing = pricingFilter === 'all'
-    ? defaultPricing
-    : defaultPricing.filter(p => p.type.includes(pricingFilter));
+    ? pricingList
+    : pricingList.filter((p) => p.type === pricingFilter);
+
+  const pricingSummaryText = pricingList.length > 0
+    ? `Pricing starts from ${pricingList[0].price} for ${pricingList.map((p) => p.type).join(', ')}.`
+    : `Contact us for pricing details on ${property.name}.`;
 
   return (
     <div className="min-h-screen bg-white">
       <Header />
 
       {/* 3-Column Layout Container */}
-      <div className="container mx-auto px-4 max-w-[1600px] py-8">
-        <div className="flex flex-col xl:flex-row gap-6 relative">
+      <div className="container mx-auto px-4 max-w-[1600px] py-6">
+        <div className="flex flex-col xl:flex-row gap-5 relative">
 
           {/* LEFT SIDEBAR - Sticky */}
-          <div className="hidden xl:block w-[150px] 2xl:w-[170px] flex-shrink-0">
-            <div className="sticky top-24 h-fit">
+          <div className="hidden xl:block w-[260px] 2xl:w-[280px] flex-shrink-0">
+            <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain">
               <PropertyStatsSidebar />
             </div>
           </div>
@@ -348,7 +358,7 @@ export default function PropertyDetailsPage() {
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { label: 'Storeys', value: property.storeys || `G + ${property.bedrooms ? property.bedrooms + 30 : 39}`, icon: '🏢' },
+                  { label: 'Storeys', value: property.storeys || 'G + 39', icon: '🏢' },
                   { label: 'Project Area', value: property.projectArea || '5.5 Acres', icon: '📏' },
                   { label: 'Possession Status', value: property.possessionStatus || (property.available ? 'Ready to Move' : 'Under Construction'), icon: '🔑' },
                   { label: 'Advertiser RERA', value: property.advertiserReraNumber || 'A52000000045', icon: '📝' },
@@ -434,20 +444,22 @@ export default function PropertyDetailsPage() {
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Pricing</h2>
               </div>
 
-              <div className="flex flex-wrap gap-3 mb-8">
-                {['all', '2 BHK', '3 BHK'].map(type => (
-                  <button
-                    key={type}
-                    onClick={() => setPricingFilter(type)}
-                    className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${pricingFilter === type
-                      ? 'bg-navy-blue text-white shadow-lg shadow-brand-teal/20 scale-105'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                  >
-                    {type === 'all' ? 'All Configurations' : type}
-                  </button>
-                ))}
-              </div>
+              {pricingFilterOptions.length > 1 && (
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {pricingFilterOptions.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setPricingFilter(type)}
+                      className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${pricingFilter === type
+                        ? 'bg-navy-blue text-white shadow-lg shadow-brand-teal/20 scale-105'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                      {type === 'all' ? 'All Configurations' : type}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="overflow-hidden border border-gray-100 rounded-2xl shadow-sm">
                 <table className="w-full text-left">
@@ -649,7 +661,7 @@ export default function PropertyDetailsPage() {
 
               <div className="space-y-4">
                 {[
-                  { q: `What is the pricing of ${property.name}?`, a: `The pricing starts from ₹ ${((property.price * 0.8) / 10000000).toFixed(2)} Cr for 2 BHK configurations.` },
+                  { q: `What is the pricing of ${property.name}?`, a: pricingSummaryText },
                   { q: `Where is ${property.name} located?`, a: `${property.name} is prime located in ${property.location}, offering excellent connectivity to key parts of the city.` },
                   { q: `What is the possession status?`, a: `Currently, the project is ${property.available ? 'Ready to Move' : 'Under Construction'} with possession expected around ${property.possessionDate || 'December 2028'}.` },
                   { q: `Is ${property.name} RERA registered?`, a: `Yes, ${property.name} is a RERA approved project. The project RERA number is ${property.projectReraNumber || 'P51900046369'}.` }
@@ -679,8 +691,8 @@ export default function PropertyDetailsPage() {
           </div>
 
           {/* RIGHT SIDEBAR - Sticky */}
-          <div className="hidden lg:block w-[320px] 2xl:w-[350px] flex-shrink-0">
-            <div className="sticky top-24 h-fit">
+          <div className="hidden lg:block w-[320px] xl:w-[340px] 2xl:w-[360px] flex-shrink-0">
+            <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain">
               <PropertyContactSidebar propertyName={property.name} />
             </div>
           </div>

@@ -1,242 +1,219 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
-export default function HousingTopPicks() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+interface TopPickProject {
+  id: string;
+  developerName: string;
+  projectName: string;
+  location: string;
+  price: string;
+  apartmentTypes: string;
+  specialOffer?: string;
+  image: string;
+}
 
-  const projects = [
-    {
-      id: 1,
-      developerName: "Ishtika Homes",
-      developerLogo: (
-        <div className="w-full h-full bg-white rounded-lg flex items-center justify-center shadow-md">
-          <span className="text-purple-600 font-bold text-xs">ISHIKA HOMES</span>
-        </div>
-      ),
-      projectName: "Ishtika Anahata",
-      location: "Samethanahalli, Bangalore East",
-      price: "₹86.65 L - 1.18 Cr",
-      apartmentTypes: "2, 2.5, 3 BHK Apartments",
-      specialOffer: "No EMI Till Possession",
-      image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=1200&h=600&fit=crop"
-    },
-    {
-      id: 2,
-      developerName: "Rrl Builders And Developers Pvt Ltd",
-      developerLogo: (
-        <div className="w-full h-full bg-gray-800 rounded-lg flex items-center justify-center">
-          <span className="text-yellow-500 font-bold text-sm">RRL</span>
-        </div>
-      ),
-      projectName: "RRL Palm Altezze",
-      location: "Bangalore East, Bangalore",
-      price: "₹1.01 Cr - 1.3 Cr",
-      apartmentTypes: "2, 3 BHK Apartments",
-      specialOffer: null,
-      image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&h=600&fit=crop"
-    },
-    {
-      id: 3,
-      developerName: "Prestige Group",
-      developerLogo: (
-        <div className="w-full h-full bg-white rounded-lg flex items-center justify-center shadow-md">
-          <span className="text-blue-600 font-bold text-xs">PRESTIGE</span>
-        </div>
-      ),
-      projectName: "Prestige Park Ridge",
-      location: "Whitefield, Bangalore",
-      price: "₹2.5 Cr - 4.5 Cr",
-      apartmentTypes: "3, 4 BHK Apartments",
-      specialOffer: "Early Bird Offer",
-      image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&h=600&fit=crop"
+const demoProjects: TopPickProject[] = [
+  {
+    id: 'demo-1',
+    developerName: 'Ishtika Homes',
+    projectName: 'Ishtika Anahata',
+    location: 'Samethanahalli, Bangalore East',
+    price: '₹86.65 L – 1.18 Cr',
+    apartmentTypes: '2, 2.5, 3 BHK',
+    specialOffer: 'No EMI Till Possession',
+    image: 'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&h=500&fit=crop',
+  },
+  {
+    id: 'demo-2',
+    developerName: 'RRL Builders',
+    projectName: 'RRL Palm Altezze',
+    location: 'Bangalore East',
+    price: '₹1.01 Cr – 1.3 Cr',
+    apartmentTypes: '2, 3 BHK',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=500&fit=crop',
+  },
+  {
+    id: 'demo-3',
+    developerName: 'Prestige Group',
+    projectName: 'Prestige Park Ridge',
+    location: 'Whitefield, Bangalore',
+    price: '₹2.5 Cr – 4.5 Cr',
+    apartmentTypes: '3, 4 BHK',
+    specialOffer: 'Early Bird Offer',
+    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=500&fit=crop',
+  },
+  {
+    id: 'demo-4',
+    developerName: 'Lodha Group',
+    projectName: 'Lodha Upper Thane',
+    location: 'Thane, Maharashtra',
+    price: '₹2.5 Cr – 4.8 Cr',
+    apartmentTypes: '2, 3, 4 BHK',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=500&fit=crop',
+  },
+];
+
+function formatPrice(price: number, pricing?: Array<{ price: string }>) {
+  if (pricing && pricing.length > 0) {
+    const prices = pricing.map((p) => p.price).filter(Boolean);
+    if (prices.length === 1) return prices[0].startsWith('₹') ? prices[0] : `₹ ${prices[0]}`;
+    if (prices.length > 1) {
+      const first = prices[0].startsWith('₹') ? prices[0] : `₹ ${prices[0]}`;
+      const last = prices[prices.length - 1].startsWith('₹') ? prices[prices.length - 1] : `₹ ${prices[prices.length - 1]}`;
+      return `${first} – ${last}`;
     }
-  ];
+  }
+  if (price >= 10000000) return `₹ ${(price / 10000000).toFixed(2)} Cr`;
+  if (price >= 100000) return `₹ ${(price / 100000).toFixed(2)} L`;
+  return `₹ ${price.toLocaleString('en-IN')}`;
+}
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % projects.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + projects.length) % projects.length);
-  };
-
-  const currentProject = projects[currentIndex];
+function TopPickCard({ project }: { project: TopPickProject }) {
+  const isDemo = project.id.startsWith('demo-');
 
   return (
-    <section className="py-24 bg-white">
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Heading */}
-        <div className="mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            FD MAKAN's top picks
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Explore top living options with us.
-          </p>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Project Card */}
-            <div className="lg:col-span-3 relative">
-              <div className="bg-brand-red/10 rounded-2xl p-4 shadow-lg h-full relative">
-                {/* Navigation Arrow - Left */}
-                <button
-                  onClick={prevSlide}
-                  className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition z-10"
-                  aria-label="Previous"
-                >
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-
-                {/* Developer Logo */}
-                <div className="mb-2">
-                  <div className="w-12 h-12">
-                    {projects[(currentIndex - 1 + projects.length) % projects.length].developerLogo}
-                  </div>
-                </div>
-
-                {/* Developer Name */}
-                <div className="mb-1">
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight">
-                    {projects[(currentIndex - 1 + projects.length) % projects.length].developerName}
-                  </h3>
-                  <a href="#" className="text-brand-teal text-xs font-medium hover:underline">
-                    View Projects
-                  </a>
-                </div>
-
-                {/* Project Details */}
-                <div className="mt-2 space-y-1">
-                  <h4 className="font-bold text-gray-900 text-sm">
-                    {projects[(currentIndex - 1 + projects.length) % projects.length].projectName}
-                  </h4>
-                  <p className="text-gray-600 text-xs">
-                    {projects[(currentIndex - 1 + projects.length) % projects.length].location}
-                  </p>
-                  <p className="text-brand-red font-semibold text-sm">
-                    {projects[(currentIndex - 1 + projects.length) % projects.length].price}
-                  </p>
-                  <p className="text-gray-600 text-xs">
-                    {projects[(currentIndex - 1 + projects.length) % projects.length].apartmentTypes}
-                  </p>
-                  {projects[(currentIndex - 1 + projects.length) % projects.length].specialOffer && (
-                    <div className="bg-pink-100 text-pink-700 px-2 py-0.5 rounded text-xs font-medium inline-flex items-center mt-1">
-                      <svg className="w-2.5 h-2.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      {projects[(currentIndex - 1 + projects.length) % projects.length].specialOffer}
-                    </div>
-                  )}
-                  <button className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm">
-                    Contact
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Central Large Image */}
-            <div className="lg:col-span-6 relative">
-              <div className="relative h-[300px] rounded-2xl overflow-hidden shadow-2xl">
-                {/* Main Image - Current Project */}
-                <div className="absolute inset-0">
-                  <Image
-                    src={currentProject.image}
-                    alt={currentProject.projectName}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
-                  {/* Dark Overlay for better text visibility */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* Top Right Thumbnail */}
-              <div className="absolute top-4 right-4 bg-white rounded-lg shadow-xl p-2 z-10 max-w-[120px]">
-                <div className="w-full h-16 rounded overflow-hidden mb-1 relative">
-                  <Image
-                    src={currentProject.image}
-                    alt={currentProject.projectName}
-                    fill
-                    className="object-cover"
-                    sizes="120px"
-                  />
-                </div>
-                <p className="text-xs font-semibold text-gray-700 text-center leading-tight">
-                  {currentProject.projectName}
-                </p>
-              </div>
-            </div>
-
-            {/* Right Project Card */}
-            <div className="lg:col-span-3 relative">
-              <div className="bg-brand-red/10 rounded-2xl p-4 shadow-lg h-full relative">
-                {/* Navigation Arrow - Right */}
-                <button
-                  onClick={nextSlide}
-                  className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition z-10"
-                  aria-label="Next"
-                >
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-
-                {/* Developer Logo */}
-                <div className="mb-2">
-                  <div className="w-12 h-12">
-                    {projects[(currentIndex + 1) % projects.length].developerLogo}
-                  </div>
-                </div>
-
-                {/* Developer Name */}
-                <div className="mb-1">
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight">
-                    {projects[(currentIndex + 1) % projects.length].developerName}
-                  </h3>
-                  <a href="#" className="text-brand-teal text-xs font-medium hover:underline">
-                    View Projects
-                  </a>
-                </div>
-
-                {/* Project Details */}
-                <div className="mt-2 space-y-1">
-                  <h4 className="font-bold text-gray-900 text-sm">
-                    {projects[(currentIndex + 1) % projects.length].projectName}
-                  </h4>
-                  <p className="text-gray-600 text-xs">
-                    {projects[(currentIndex + 1) % projects.length].location}
-                  </p>
-                  <p className="text-brand-red font-semibold text-sm">
-                    {projects[(currentIndex + 1) % projects.length].price}
-                  </p>
-                  <p className="text-gray-600 text-xs">
-                    {projects[(currentIndex + 1) % projects.length].apartmentTypes}
-                  </p>
-                  {projects[(currentIndex + 1) % projects.length].specialOffer && (
-                    <div className="bg-pink-100 text-pink-700 px-2 py-0.5 rounded text-xs font-medium inline-flex items-center mt-1">
-                      <svg className="w-2.5 h-2.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      {projects[(currentIndex + 1) % projects.length].specialOffer}
-                    </div>
-                  )}
-                  <button className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm">
-                    Contact
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+    <article className="w-[320px] md:w-[360px] flex-shrink-0 mx-3 bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden group hover:shadow-soft-lg hover:border-brand-teal/20 transition-all duration-300">
+      <div className="relative h-44 overflow-hidden">
+        <Image
+          src={project.image}
+          alt={project.projectName}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          sizes="360px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+        {project.specialOffer && (
+          <span className="absolute top-3 left-3 bg-brand-red text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-md">
+            {project.specialOffer}
+          </span>
+        )}
+        <div className="absolute bottom-3 left-3 right-3">
+          <p className="text-white/80 text-[10px] font-semibold uppercase tracking-wider">{project.developerName}</p>
+          <h3 className="text-white font-bold text-lg leading-tight truncate">{project.projectName}</h3>
         </div>
       </div>
-    </section>
+
+      <div className="p-4 space-y-3">
+        <div className="flex items-start gap-2 text-gray-500 text-sm">
+          <svg className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="leading-snug">{project.location}</span>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-brand-red font-extrabold text-base">{project.price}</p>
+          <span className="text-[11px] font-semibold text-navy-blue bg-navy-blue/5 px-2.5 py-1 rounded-full whitespace-nowrap">
+            {project.apartmentTypes}
+          </span>
+        </div>
+
+        {isDemo ? (
+          <button className="w-full py-2.5 bg-navy-blue text-white text-sm font-bold rounded-xl hover:bg-brand-teal transition-colors">
+            Contact
+          </button>
+        ) : (
+          <Link
+            href={`/view-details/${project.id}`}
+            className="block w-full py-2.5 bg-navy-blue text-white text-sm font-bold rounded-xl hover:bg-brand-teal transition-colors text-center"
+          >
+            View Details
+          </Link>
+        )}
+      </div>
+    </article>
   );
 }
 
+export default function HousingTopPicks() {
+  const [projects, setProjects] = useState<TopPickProject[]>(demoProjects);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/properties');
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const flagged = data.filter((p: any) => p.showInTopSelling || p.showInPremium);
+        const source = flagged.length > 0 ? flagged : data;
+
+        if (source.length === 0) return;
+
+        const formatted: TopPickProject[] = source.map((prop: any) => ({
+          id: prop._id,
+          developerName: prop.developer || 'Developer',
+          projectName: prop.name,
+          location: prop.location,
+          price: formatPrice(prop.price, prop.pricing),
+          apartmentTypes: prop.pricing?.length
+            ? prop.pricing.map((p: { type: string }) => p.type).join(', ')
+            : 'Premium Homes',
+          specialOffer: prop.showInPremium ? 'Premium Pick' : undefined,
+          image: prop.images?.[0] || demoProjects[0].image,
+        }));
+
+        setProjects(formatted.length >= 3 ? formatted : [...formatted, ...demoProjects].slice(0, 6));
+      } catch (error) {
+        console.error('Error fetching top picks:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const loopedProjects = [...projects, ...projects];
+
+  return (
+    <section className="py-14 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+      <div className="container mx-auto px-4 max-w-7xl mb-10">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <span className="inline-block px-3 py-1 bg-brand-teal/10 text-brand-teal text-xs font-bold uppercase tracking-widest rounded-full mb-3">
+              Curated For You
+            </span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
+              FD MAKAN&apos;s Top Picks
+            </h2>
+            <p className="text-gray-500 mt-2 text-lg">
+              Handpicked premium projects — explore top living options with us.
+            </p>
+          </div>
+          <Link
+            href="/properties"
+            className="inline-flex items-center gap-2 text-navy-blue font-bold hover:text-brand-teal transition text-sm"
+          >
+            View all properties
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12 text-gray-400">Loading top picks...</div>
+      ) : (
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+          <div className="overflow-hidden">
+            <div className="top-picks-track animate-scroll-left-slow gap-0">
+              {loopedProjects.map((project, index) => (
+                <TopPickCard key={`${project.id}-${index}`} project={project} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

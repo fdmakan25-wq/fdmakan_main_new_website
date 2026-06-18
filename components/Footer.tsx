@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_OFFICE, CONTACT_BUILDING, CONTACT_CITY, CONTACT_MAPS_URL } from '@/lib/contact';
 
 export default function Footer() {
   return (
@@ -64,9 +65,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/news" className="text-gray-300 hover:text-teal-400 transition flex items-center group">
+                <Link href="/blogs" className="text-gray-300 hover:text-teal-400 transition flex items-center group">
                   <span className="w-0 group-hover:w-2 h-0.5 bg-teal-400 mr-0 group-hover:mr-2 transition-all"></span>
-                  News
+                  Blogs
                 </Link>
               </li>
               <li>
@@ -113,14 +114,23 @@ export default function Footer() {
                 <svg className="w-5 h-5 text-brand-red mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                <span>+1 (555) 123-4567</span>
+                <a href={`tel:${CONTACT_PHONE_TEL}`} className="hover:text-brand-red transition">{CONTACT_PHONE_DISPLAY}</a>
               </li>
               <li className="flex items-start">
                 <svg className="w-5 h-5 text-brand-teal mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>123 Real Estate Ave<br />City, State 12345</span>
+                <a
+                  href={CONTACT_MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-brand-teal transition leading-relaxed"
+                >
+                  {CONTACT_OFFICE}<br />
+                  {CONTACT_BUILDING}<br />
+                  {CONTACT_CITY}
+                </a>
               </li>
             </ul>
           </div>
