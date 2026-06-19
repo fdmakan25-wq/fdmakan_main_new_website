@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PropertyCard from '@/components/PropertyCard';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 interface Developer {
   _id: string;
@@ -123,7 +123,7 @@ export default function DeveloperDetailsPage() {
             <div className="flex-shrink-0">
               {developer.logo ? (
                 <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center p-6 shadow-lg">
-                  <Image
+                  <SafeImage
                     src={developer.logo}
                     alt={developer.name}
                     width={200}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 interface Blog {
   _id?: string;
@@ -181,7 +181,7 @@ export default function RecentBlogs() {
             <div className="lg:col-span-6 relative">
               <Link href={blogHref(currentBlog)} className="block relative h-[300px] rounded-2xl overflow-hidden shadow-2xl group">
                 {currentBlog.image ? (
-                  <Image src={currentBlog.image} alt={currentBlog.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="50vw" />
+                  <SafeImage src={currentBlog.image} alt={currentBlog.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="50vw" />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900" />
                 )}

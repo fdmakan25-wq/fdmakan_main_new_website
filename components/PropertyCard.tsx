@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 interface Property {
   id?: string | number;
@@ -41,7 +41,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   return (
     <div className="premium-card overflow-hidden group">
       <div className="relative h-72 w-full overflow-hidden">
-        <Image
+        <SafeImage
           src={displayImage}
           alt={displayTitle}
           fill

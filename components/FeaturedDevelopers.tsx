@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 interface Developer {
   _id?: string;
@@ -98,7 +98,7 @@ export default function FeaturedDevelopers() {
                     aria-label={developer.name}
                   >
                     {developer.logoUrl ? (
-                      <Image
+                      <SafeImage
                         src={developer.logoUrl}
                         alt={developer.name}
                         width={280}

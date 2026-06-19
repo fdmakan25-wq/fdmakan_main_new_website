@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -67,7 +67,7 @@ export default function BlogsPage() {
                   className="bg-white rounded-2xl shadow-soft overflow-hidden border border-gray-100 hover:shadow-soft-lg hover:border-brand-teal/20 transition-all duration-300 group"
                 >
                   <div className="relative h-48 overflow-hidden">
-                    <Image
+                    <SafeImage
                       src={blog.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop'}
                       alt={blog.title}
                       fill

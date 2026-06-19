@@ -2,13 +2,42 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 import { EXTERNAL_AMENITIES } from '@/lib/constants';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PropertyStatsSidebar from '@/components/PropertyStatsSidebar';
 import PropertyContactSidebar from '@/components/PropertyContactSidebar';
+import PropertyImageLightbox from '@/components/PropertyImageLightbox';
 import EmiCalculator from '@/components/EmiCalculator';
+import {
+  buildPropertyMapQuery,
+  getGoogleMapsEmbedUrl,
+  getGoogleMapsSearchUrl,
+} from '@/lib/google-maps';
+import {
+  SectionIcon,
+  InlineIconBox,
+  IconSparkles,
+  IconDocument,
+  IconBuilding,
+  IconStoreys,
+  IconProjectArea,
+  IconKey,
+  IconPossession,
+  IconCertificate,
+  IconCalendar,
+  IconShield,
+  IconBanknotes,
+  IconInfo,
+  IconMapPin,
+  IconHome,
+  IconMap,
+  IconCheck,
+  IconFaq,
+  getLandmarkIcon,
+  getAmenityIcon,
+} from '@/components/property/PropertySectionIcons';
 
 interface Property {
   _id: string;
@@ -17,6 +46,7 @@ interface Property {
   price: number;
   developer: string;
   location: string;
+  city?: string;
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
@@ -71,6 +101,9 @@ export default function PropertyDetailsPage() {
   const [developer, setDeveloper] = useState<Developer | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVideo, setSelectedVideo] = useState(0);
+  const [galleryMode, setGalleryMode] = useState<'photos' | 'videos'>('photos');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [showAllHighlights, setShowAllHighlights] = useState(false);
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [pricingFilter, setPricingFilter] = useState('all');
@@ -101,7 +134,7 @@ export default function PropertyDetailsPage() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      const headerOffset = 140; // Approx height of Header + Sticky Tab
+      const headerOffset = 180; // Header + sticky title bar + sticky tabs
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -126,6 +159,13 @@ export default function PropertyDetailsPage() {
       if (!response.ok) throw new Error('Property not found');
       const data = await response.json();
       setProperty(data);
+      if (data.images?.length) {
+        setGalleryMode('photos');
+        setSelectedImage(0);
+      } else if (data.videos?.length) {
+        setGalleryMode('videos');
+        setSelectedVideo(0);
+      }
 
       // Fetch developer info
       if (data.developer) {
@@ -215,6 +255,14 @@ export default function PropertyDetailsPage() {
     ? `Pricing starts from ${pricingList[0].price} for ${pricingList.map((p) => p.type).join(', ')}.`
     : `Contact us for pricing details on ${property.name}.`;
 
+  const hasImages = property.images && property.images.length > 0;
+  const hasVideos = property.videos && property.videos.length > 0;
+  const mapQuery = buildPropertyMapQuery(property);
+  const mapsSearchUrl = getGoogleMapsSearchUrl(mapQuery);
+  const mapsEmbedUrl = getGoogleMapsEmbedUrl(mapQuery);
+  const displayAddress =
+    property.address || [property.name, property.location, property.city, 'India'].filter(Boolean).join(', ');
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -235,97 +283,227 @@ export default function PropertyDetailsPage() {
 
             {/* Gallery / Hero Section (Moved inside center column or kept full width? Based on image, headers are usually full width, but content is center. Let's put the main content here.) */}
 
-            {/* Hero Image Section */}
+            {/* Hero gallery — photos & videos */}
             <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
-              <div className="relative w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden">
-                {property.images && property.images.length > 0 ? (
+              <div className="relative w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden bg-gray-900 group">
+                {galleryMode === 'photos' && hasImages ? (
                   <>
-                    <Image
+                    <button
+                      type="button"
+                      onClick={() => setLightboxOpen(true)}
+                      className="absolute inset-0 z-10 cursor-zoom-in"
+                      aria-label="Open full image view"
+                    />
+                    <SafeImage
                       src={property.images[selectedImage]}
-                      alt={property.name}
+                      alt={`${property.name} - photo ${selectedImage + 1}`}
                       fill
-                      className="object-cover"
+                      className="object-cover pointer-events-none"
                       priority
                     />
+                    <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="bg-black/60 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                        Click to enlarge
+                      </span>
+                    </div>
 
-                    {/* Navigation Arrows */}
                     {property.images.length > 1 && (
                       <>
                         <button
-                          onClick={() => setSelectedImage((selectedImage + 1) % property.images.length)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage((selectedImage + 1) % property.images.length);
+                          }}
                           className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition"
+                          aria-label="Next photo"
                         >
                           <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
                         <button
-                          onClick={() => setSelectedImage((selectedImage - 1 + property.images.length) % property.images.length)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(
+                              (selectedImage - 1 + property.images.length) % property.images.length
+                            );
+                          }}
                           className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition"
+                          aria-label="Previous photo"
                         >
                           <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                           </svg>
                         </button>
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full">
+                          {selectedImage + 1} / {property.images.length}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : galleryMode === 'videos' && hasVideos ? (
+                  <>
+                    <video
+                      key={property.videos![selectedVideo]}
+                      src={property.videos![selectedVideo]}
+                      className="w-full h-full object-contain bg-black"
+                      controls
+                      playsInline
+                    />
+                    {property.videos!.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedVideo((selectedVideo + 1) % property.videos!.length)
+                          }
+                          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition"
+                          aria-label="Next video"
+                        >
+                          <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedVideo(
+                              (selectedVideo - 1 + property.videos!.length) % property.videos!.length
+                            )
+                          }
+                          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition"
+                          aria-label="Previous video"
+                        >
+                          <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full pointer-events-none">
+                          {selectedVideo + 1} / {property.videos!.length}
+                        </div>
                       </>
                     )}
                   </>
                 ) : (
                   <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                    <p className="text-gray-500">No images available</p>
+                    <p className="text-gray-500">No media available</p>
                   </div>
                 )}
               </div>
+
+              {/* Thumbnail strip */}
+              {galleryMode === 'photos' && hasImages && property.images.length > 1 && (
+                <div className="flex gap-2 px-2 py-3 overflow-x-auto scrollbar-hide">
+                  {property.images.map((img, index) => (
+                    <button
+                      key={`${img}-${index}`}
+                      type="button"
+                      onClick={() => {
+                        setSelectedImage(index);
+                        setLightboxOpen(true);
+                      }}
+                      className={`relative flex-shrink-0 w-20 h-16 md:w-24 md:h-[4.5rem] rounded-lg overflow-hidden border-2 transition ${
+                        selectedImage === index
+                          ? 'border-brand-red ring-2 ring-brand-red/30'
+                          : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {galleryMode === 'videos' && hasVideos && property.videos!.length > 1 && (
+                <div className="flex gap-2 px-2 py-3 overflow-x-auto scrollbar-hide">
+                  {property.videos!.map((video, index) => (
+                    <button
+                      key={`${video}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedVideo(index)}
+                      className={`relative flex-shrink-0 w-28 h-16 md:w-32 md:h-[4.5rem] rounded-lg overflow-hidden border-2 transition bg-black ${
+                        selectedVideo === index
+                          ? 'border-brand-red ring-2 ring-brand-red/30'
+                          : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <video src={video} className="w-full h-full object-cover pointer-events-none" muted preload="metadata" />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Highlights Section */}
-
-            {/* Horizontal Sticky Navigation Tabs */}
-            <div className="sticky top-24 z-30 bg-white/80 backdrop-blur-md shadow-lg shadow-gray-100 border border-gray-100 -mx-4 px-4 md:mx-0 md:px-2 md:rounded-2xl overflow-x-auto scrollbar-hide py-3">
-              <div className="flex whitespace-nowrap min-w-full gap-2 px-1">
-                {['Highlights', 'Overview', 'About', 'Pricing', 'EMI', 'Amenities', 'Connectivity', 'Builder', 'FAQ'].map((item) => {
-                  const id = item.toLowerCase();
-                  const isActive = activeTab === id;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => scrollToSection(id)}
-                      className={`
-                        px-5 py-2.5 text-sm font-bold transition-all duration-300 relative rounded-xl
-                        ${isActive
-                          ? 'bg-navy-blue text-white shadow-md shadow-brand-teal/20 scale-105'
-                          : 'text-gray-500 hover:text-navy-blue hover:bg-gray-50'
-                        }
-                      `}
-                    >
-                      {item}
-                      {isActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>
-                      )}
-                    </button>
-                  );
-                })}
+            {/* Sticky title + tabs — stay together on scroll */}
+            <div className="sticky top-16 z-40 -mx-4 px-4 md:mx-0 md:px-0">
+              <div className="bg-white/90 backdrop-blur-md shadow-lg shadow-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
+                <div className="flex items-center justify-between gap-4 px-4 py-3 md:px-5 border-b border-gray-100">
+                  <h1 className="text-base md:text-xl font-bold text-gray-900 leading-tight truncate min-w-0">
+                    {property.name}
+                  </h1>
+                  {(property.location || property.city) && (
+                    <p className="text-xs md:text-sm text-gray-500 font-normal flex items-center gap-1.5 flex-shrink-0 text-right">
+                      <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="truncate max-w-[120px] md:max-w-none">
+                        {[property.location, property.city].filter(Boolean).join(', ')}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <div className="overflow-x-auto scrollbar-hide py-3 px-2 md:px-3">
+                  <div className="flex whitespace-nowrap min-w-full gap-2 px-1">
+                    {['Highlights', 'Overview', 'About', 'Pricing', 'EMI', 'Amenities', 'Connectivity', 'Builder', 'FAQ'].map((item) => {
+                      const id = item.toLowerCase();
+                      const isActive = activeTab === id;
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => scrollToSection(id)}
+                          className={`
+                            px-5 py-2.5 text-sm font-bold transition-all duration-300 relative rounded-xl
+                            ${isActive
+                              ? 'bg-navy-blue text-white shadow-md shadow-brand-teal/20 scale-105'
+                              : 'text-gray-500 hover:text-navy-blue hover:bg-gray-50'
+                            }
+                          `}
+                        >
+                          {item}
+                          {isActive && (
+                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <section id="highlights" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+            <section id="highlights" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-brand-teal/10 rounded-xl flex items-center justify-center text-brand-teal">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
-                </div>
+                <SectionIcon color="teal"><IconSparkles /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Highlights of {property.name}</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {displayedHighlights.map((highlight, index) => (
                   <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50/50 border border-transparent hover:border-brand-teal/30 hover:bg-white transition-all group">
-                    <div className="mt-1 flex-shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-brand-teal/20 flex items-center justify-center text-brand-teal group-hover:scale-110 transition-transform">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
+                    <div className="mt-0.5 flex-shrink-0">
+                      <InlineIconBox color="teal">
+                        <IconCheck />
+                      </InlineIconBox>
                     </div>
                     <span className="text-gray-700 font-medium leading-relaxed">{highlight}</span>
                   </div>
@@ -347,29 +525,25 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* Overview Section */}
-            <section id="overview" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
+            <section id="overview" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
+                <SectionIcon color="red"><IconDocument /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Overview of {property.name}</h2>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { label: 'Storeys', value: property.storeys || 'G + 39', icon: '🏢' },
-                  { label: 'Project Area', value: property.projectArea || '5.5 Acres', icon: '📏' },
-                  { label: 'Possession Status', value: property.possessionStatus || (property.available ? 'Ready to Move' : 'Under Construction'), icon: '🔑' },
-                  { label: 'Advertiser RERA', value: property.advertiserReraNumber || 'A52000000045', icon: '📝' },
-                  { label: 'Possession Date', value: property.possessionDate || '12-2028', icon: '📅' },
-                  { label: 'Project RERA', value: property.projectReraNumber || 'P51900046369', isLink: true, icon: '📜' },
+                  { label: 'Storeys', value: property.storeys || 'G + 39', icon: <IconStoreys /> },
+                  { label: 'Project Area', value: property.projectArea || '5.5 Acres', icon: <IconProjectArea /> },
+                  { label: 'Possession Status', value: property.possessionStatus || (property.available ? 'Ready to Move' : 'Under Construction'), icon: <IconPossession /> },
+                  { label: 'Advertiser RERA', value: property.advertiserReraNumber || 'A52000000045', icon: <IconCertificate /> },
+                  { label: 'Possession Date', value: property.possessionDate || '12-2028', icon: <IconCalendar /> },
+                  { label: 'Project RERA', value: property.projectReraNumber || 'P51900046369', isLink: true, icon: <IconShield /> },
                 ].map((item, idx) => (
                   <div key={idx} className="group p-5 rounded-2xl bg-gray-50 border border-transparent hover:border-brand-red/30 hover:bg-white transition-all shadow-sm hover:shadow-md">
                     <div className="flex items-center gap-4">
-                      <div className="text-3xl grayscale group-hover:grayscale-0 transition-all transform group-hover:scale-110">
+                      <InlineIconBox color="red">
                         {item.icon}
-                      </div>
+                      </InlineIconBox>
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{item.label}</span>
                         <span className={`font-bold text-lg ${item.isLink ? 'text-brand-teal hover:underline cursor-pointer' : 'text-gray-900'}`}>{item.value}</span>
@@ -381,13 +555,9 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* About Project */}
-            <section id="about" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
+            <section id="about" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-navy-blue/10 rounded-xl flex items-center justify-center text-navy-blue">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+                <SectionIcon color="navy"><IconInfo /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">About {property.name}</h2>
               </div>
               <div className="relative">
@@ -434,13 +604,9 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* Pricing */}
-            <section id="pricing" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
+            <section id="pricing" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-brand-teal/10 rounded-xl flex items-center justify-center text-brand-teal">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+                <SectionIcon color="teal"><IconBanknotes /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Pricing</h2>
               </div>
 
@@ -499,13 +665,14 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* EMI Calculator Section */}
-            <section id="emi" className="scroll-mt-36">
+            <section id="emi" className="scroll-mt-48">
               <EmiCalculator defaultLoanAmount={property.price} />
             </section>
 
             {/* Amenities Section */}
-            <section id="amenities" className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm scroll-mt-36">
-              <div className="flex items-center justify-between mb-8">
+            <section id="amenities" className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm scroll-mt-48">
+              <div className="flex items-center gap-3 mb-8">
+                <SectionIcon color="navy"><IconHome /></SectionIcon>
                 <h2 className="text-2xl font-bold text-navy-blue">Amenities</h2>
               </div>
 
@@ -515,9 +682,9 @@ export default function PropertyDetailsPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-4">
                   {EXTERNAL_AMENITIES.filter(amenity => property.amenities?.includes(amenity.name)).map((amenity, index) => (
                     <div key={index} className="flex items-center gap-3 group transition-all duration-300 hover:translate-x-1">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 text-navy-blue group-hover:bg-navy-blue group-hover:text-white transition-colors border border-gray-100 text-xl shadow-sm">
-                        <span>{amenity.icon}</span>
-                      </div>
+                      <InlineIconBox color="navy">
+                        {getAmenityIcon(amenity.name)}
+                      </InlineIconBox>
                       <span className="text-sm font-medium text-gray-600 group-hover:text-navy-blue transition-colors">
                         {amenity.name}
                       </span>
@@ -531,37 +698,45 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* Connectivity */}
-            <section id="connectivity" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
+            <section id="connectivity" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-brand-teal/10 rounded-xl flex items-center justify-center text-brand-teal">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
+                <SectionIcon color="teal"><IconMapPin /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Location & Connectivity</h2>
+              </div>
+
+              {/* Embedded map */}
+              <div className="mb-8 rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100">
+                <iframe
+                  title={`Map of ${property.name}`}
+                  src={mapsEmbedUrl}
+                  className="w-full h-[260px] md:h-[340px] border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div>
                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Site Address</h3>
                   <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-teal-600 shadow-sm">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-700 font-semibold leading-relaxed">
-                      {property.address || `${property.name}, ${property.location}, India`}
+                    <InlineIconBox color="teal">
+                      <IconHome />
+                    </InlineIconBox>
+                    <p className="text-gray-700 font-semibold leading-relaxed pt-1">
+                      {displayAddress}
                     </p>
                   </div>
 
-                  <button className="mt-6 w-full py-4 rounded-xl bg-navy-blue text-white font-bold hover:bg-brand-teal transition-all shadow-lg shadow-brand-teal/20 flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 7m0 10V7" />
-                    </svg>
+                  <a
+                    href={mapsSearchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 w-full py-4 rounded-xl bg-navy-blue text-white font-bold hover:bg-brand-teal transition-all shadow-lg shadow-brand-teal/20 flex items-center justify-center gap-2.5"
+                  >
+                    <IconMap />
                     <span>View on Google Maps</span>
-                  </button>
+                  </a>
                 </div>
 
                 <div>
@@ -574,11 +749,13 @@ export default function PropertyDetailsPage() {
                       { name: 'School', distance: '1.5 km' }
                     ]).map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-transparent hover:border-brand-teal/30 hover:bg-white transition-all group">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-teal-400 group-hover:scale-150 transition-transform"></div>
-                          <span className="text-gray-700 font-bold">{item.name}</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <InlineIconBox color="teal">
+                            {getLandmarkIcon(item.name)}
+                          </InlineIconBox>
+                          <span className="text-gray-700 font-bold truncate">{item.name}</span>
                         </div>
-                        <span className="px-3 py-1 rounded-full bg-white text-brand-teal text-xs font-black shadow-sm border border-gray-100">
+                        <span className="px-3 py-1 rounded-full bg-white text-brand-teal text-xs font-bold shadow-sm border border-gray-100 shrink-0 ml-2">
                           {item.distance}
                         </span>
                       </div>
@@ -589,13 +766,9 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* About Developer */}
-            <section id="builder" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
+            <section id="builder" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
+                <SectionIcon color="red"><IconBuilding /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">About Developer</h2>
               </div>
 
@@ -649,13 +822,9 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* FAQ Section */}
-            <section id="faq" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-36">
+            <section id="faq" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+                <SectionIcon color="red"><IconFaq /></SectionIcon>
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Frequently Asked Questions</h2>
               </div>
 
@@ -709,6 +878,17 @@ export default function PropertyDetailsPage() {
           Book Visit
         </button>
       </div >
+
+      {hasImages && (
+        <PropertyImageLightbox
+          images={property.images}
+          initialIndex={selectedImage}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          propertyName={property.name}
+          onIndexChange={setSelectedImage}
+        />
+      )}
 
       <Footer />
     </div >

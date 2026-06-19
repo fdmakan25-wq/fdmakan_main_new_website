@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
 
 interface TopPickProject {
@@ -77,7 +77,7 @@ function TopPickCard({ project }: { project: TopPickProject }) {
   return (
     <article className="w-[320px] md:w-[360px] flex-shrink-0 mx-3 bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden group hover:shadow-soft-lg hover:border-brand-teal/20 transition-all duration-300">
       <div className="relative h-44 overflow-hidden">
-        <Image
+        <SafeImage
           src={project.image}
           alt={project.projectName}
           fill

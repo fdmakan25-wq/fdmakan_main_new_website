@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       description,
       price,
       developer,
+      city,
       location,
       bedrooms,
       bathrooms,
@@ -92,6 +93,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!city || city.trim() === '') {
+      return NextResponse.json(
+        { error: 'City is required', message: 'City is required' },
+        { status: 400 }
+      );
+    }
 
     if (!images || images.length === 0) {
       return NextResponse.json(
@@ -131,6 +138,7 @@ export async function POST(request: NextRequest) {
       description,
       price: parseFloat(price),
       developer,
+      city,
       location,
       bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
       bathrooms: bathrooms ? parseInt(bathrooms) : undefined,

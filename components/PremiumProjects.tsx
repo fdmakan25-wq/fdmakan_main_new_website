@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 interface Property {
   _id?: string;
@@ -137,7 +137,7 @@ export default function PremiumProjects() {
               >
                 {/* Image with Hover Effect */}
                 <div className="absolute inset-0">
-                  <Image
+                  <SafeImage
                     src={project.image}
                     alt={project.name}
                     fill
@@ -186,7 +186,7 @@ export default function PremiumProjects() {
               >
                 {/* Image with Hover Effect */}
                 <div className="absolute inset-0">
-                  <Image
+                  <SafeImage
                     src={project.image}
                     alt={project.name}
                     fill

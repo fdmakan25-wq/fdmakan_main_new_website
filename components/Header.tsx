@@ -65,7 +65,13 @@ export default function Header() {
     }
 
     const onScroll = () => {
-      setSolidNav(window.scrollY > window.innerHeight * 0.55);
+      const hero = document.getElementById('hero-section');
+      if (!hero) {
+        setSolidNav(window.scrollY > 80);
+        return;
+      }
+      const heroBottom = hero.getBoundingClientRect().bottom;
+      setSolidNav(heroBottom <= 72);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -112,11 +118,11 @@ export default function Header() {
       className={`${isHome ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-50 transition-all duration-500 overflow-visible ${
         lightNav
           ? 'bg-transparent shadow-none border-b border-transparent'
-          : 'glass-morphism shadow-soft border-b border-white/20'
+          : 'bg-white shadow-md border-b border-gray-200'
       }`}
     >
       <nav className="container mx-auto px-6 py-1 max-w-7xl">
-        <div className="flex items-center justify-between h-16 md:h-[4.75rem]">
+        <div className="flex items-center justify-between h-14 md:h-16">
           <Link href="/" className="flex items-center hover:opacity-90 transition shrink-0 p-0 m-0 leading-none">
             <Logo size="navbar" light={lightNav} />
           </Link>

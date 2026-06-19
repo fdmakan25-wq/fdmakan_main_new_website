@@ -19,6 +19,7 @@ interface Property {
   price: number;
   developer: string;
   location: string;
+  city?: string;
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
@@ -70,9 +71,22 @@ interface Developer {
   name: string;
 }
 
+interface LocationItem {
+  _id: string;
+  name: string;
+  cityId: string | null;
+}
+
+interface CityWithLocations {
+  _id: string;
+  name: string;
+  locations: LocationItem[];
+}
+
 export default function PropertiesTab() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [developers, setDevelopers] = useState<Developer[]>([]);
+  const [cities, setCities] = useState<CityWithLocations[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -80,7 +94,20 @@ export default function PropertiesTab() {
   useEffect(() => {
     fetchProperties();
     fetchDevelopers();
+    fetchLocations();
   }, []);
+
+  const fetchLocations = async () => {
+    try {
+      const response = await fetch('/api/cities');
+      if (response.ok) {
+        const data = await response.json();
+        setCities(data.cities || []);
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
 
   const fetchDevelopers = async () => {
     try {
@@ -279,6 +306,7 @@ export default function PropertiesTab() {
         <PropertyFormModal
           property={editingProperty}
           developers={developers}
+          cities={cities}
           onClose={() => {
             setShowModal(false);
             setEditingProperty(null);
@@ -298,11 +326,13 @@ export default function PropertiesTab() {
 function PropertyFormModal({
   property,
   developers,
+  cities,
   onClose,
   onSuccess,
 }: {
   property: Property | null;
   developers: Developer[];
+  cities: CityWithLocations[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -311,6 +341,7 @@ function PropertyFormModal({
     description: property?.description || '',
     price: property?.price || 0,
     developer: property?.developer || '',
+    city: property?.city || '',
     location: property?.location || '',
     available: property?.available ?? true,
     images: property?.images || [],
@@ -390,8 +421,21 @@ function PropertyFormModal({
 
   const [submitting, setSubmitting] = useState(false);
   const [imageInput, setImageInput] = useState('');
+  const [videoInput, setVideoInput] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
+
+  useEffect(() => {
+    if (property && !property.city && property.location && cities.length > 0) {
+      const matchedCity = cities.find((city) =>
+        city.locations.some((loc) => loc.name === property.location)
+      );
+      if (matchedCity) {
+        setFormData((prev) => ({ ...prev, city: matchedCity.name }));
+      }
+    }
+  }, [property, cities]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -423,8 +467,12 @@ function PropertyFormModal({
       alert('Please select a developer');
       return;
     }
+    if (!formData.city.trim()) {
+      alert('Please select a city');
+      return;
+    }
     if (!formData.location.trim()) {
-      alert('Please enter a location');
+      alert('Please select a location');
       return;
     }
     if (!formData.images || formData.images.length === 0) {
@@ -517,15 +565,69 @@ function PropertyFormModal({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <select
+                  required
+                  value={formData.city}
+                  onChange={(e) =>
+                    setFormData({ ...formData, city: e.target.value, location: '' })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                >
+                  <option value="">Select City</option>
+                  {cities.map((city) => (
+                    <option key={city._id} value={city.name}>
+                      {city.name}
+                    </option>
+                  ))}
+                  {property?.city &&
+                    !cities.some((city) => city.name === property.city) && (
+                      <option value={property.city}>{property.city}</option>
+                    )}
+                </select>
+                {cities.length === 0 && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Please add a city first in the Locations tab
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Location *
                 </label>
-                <input
-                  type="text"
+                <select
                   required
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
+                  disabled={!formData.city}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {formData.city ? 'Select Location' : 'Select city first'}
+                  </option>
+                  {cities
+                    .find((city) => city.name === formData.city)
+                    ?.locations.map((loc) => (
+                      <option key={loc._id} value={loc.name}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  {property?.location &&
+                    formData.city &&
+                    !cities
+                      .find((city) => city.name === formData.city)
+                      ?.locations.some((loc) => loc.name === property.location) && (
+                      <option value={property.location}>{property.location}</option>
+                    )}
+                </select>
+                {formData.city &&
+                  (cities.find((city) => city.name === formData.city)?.locations.length ?? 0) ===
+                    0 && (
+                    <p className="text-xs text-red-600 mt-1">
+                      No locations in this city — add one in the Locations tab
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1294,6 +1396,9 @@ function PropertyFormModal({
           {/* Images */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Images *</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Add multiple images — upload one at a time or pick several files. The first image is the main cover photo.
+            </p>
             <div className="space-y-2">
               {/* File Upload */}
               <div className="mb-4">
@@ -1303,41 +1408,48 @@ function PropertyFormModal({
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                  multiple
                   onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    // Validate file size (10MB max)
-                    if (file.size > 10 * 1024 * 1024) {
-                      alert('File size too large. Maximum size is 10MB.');
-                      return;
-                    }
+                    const files = e.target.files;
+                    if (!files || files.length === 0) return;
 
                     setUploadingImage(true);
+                    const newUrls: string[] = [];
+
                     try {
-                      const uploadData = new FormData();
-                      uploadData.append('file', file);
+                      for (const file of Array.from(files)) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          alert(`${file.name} is too large. Maximum size is 10MB.`);
+                          continue;
+                        }
 
-                      const response = await fetch('/api/upload/image', {
-                        method: 'POST',
-                        body: uploadData,
-                      });
+                        const uploadData = new FormData();
+                        uploadData.append('file', file);
 
-                      if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.error || 'Failed to upload image');
+                        const response = await fetch('/api/upload/image', {
+                          method: 'POST',
+                          body: uploadData,
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json();
+                          throw new Error(error.error || `Failed to upload ${file.name}`);
+                        }
+
+                        const data = await response.json();
+                        newUrls.push(data.url);
                       }
 
-                      const data = await response.json();
-                      setFormData({
-                        ...formData,
-                        images: [...formData.images, data.url],
-                      });
-                      // Reset file input
+                      if (newUrls.length > 0) {
+                        setFormData({
+                          ...formData,
+                          images: [...formData.images, ...newUrls],
+                        });
+                      }
                       e.target.value = '';
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                       console.error('Error uploading image:', error);
-                      alert(error.message || 'Failed to upload image');
+                      alert(error instanceof Error ? error.message : 'Failed to upload image');
                     } finally {
                       setUploadingImage(false);
                     }
@@ -1349,7 +1461,7 @@ function PropertyFormModal({
                   <p className="text-xs text-brand-teal mt-1">Uploading image to Cloudinary...</p>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: JPEG, PNG, WebP, GIF (Max 10MB)
+                  Supported formats: JPEG, PNG, WebP, GIF (Max 10MB each). Select multiple files at once.
                 </p>
               </div>
 
@@ -1395,6 +1507,11 @@ function PropertyFormModal({
                 <div className="grid grid-cols-4 gap-2 mt-4">
                   {formData.images.map((img, index) => (
                     <div key={index} className="relative">
+                      {index === 0 && (
+                        <span className="absolute top-1 left-1 z-10 bg-brand-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          Cover
+                        </span>
+                      )}
                       <img
                         src={img}
                         alt={`Property ${index + 1}`}
@@ -1409,6 +1526,138 @@ function PropertyFormModal({
                           });
                         }}
                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Videos */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Videos (Optional)</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Add property walkthrough or promo videos. Visitors can switch between photos and videos on the details page.
+            </p>
+            <div className="space-y-2">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Video File
+                </label>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                  multiple
+                  onChange={async (e) => {
+                    const files = e.target.files;
+                    if (!files || files.length === 0) return;
+
+                    setUploadingVideo(true);
+                    const newUrls: string[] = [];
+
+                    try {
+                      for (const file of Array.from(files)) {
+                        if (file.size > 100 * 1024 * 1024) {
+                          alert(`${file.name} is too large. Maximum size is 100MB.`);
+                          continue;
+                        }
+
+                        const uploadData = new FormData();
+                        uploadData.append('file', file);
+
+                        const response = await fetch('/api/upload/video', {
+                          method: 'POST',
+                          body: uploadData,
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json();
+                          throw new Error(error.error || `Failed to upload ${file.name}`);
+                        }
+
+                        const data = await response.json();
+                        newUrls.push(data.url);
+                      }
+
+                      if (newUrls.length > 0) {
+                        setFormData({
+                          ...formData,
+                          videos: [...formData.videos, ...newUrls],
+                        });
+                      }
+                      e.target.value = '';
+                    } catch (error: unknown) {
+                      console.error('Error uploading video:', error);
+                      alert(error instanceof Error ? error.message : 'Failed to upload video');
+                    } finally {
+                      setUploadingVideo(false);
+                    }
+                  }}
+                  disabled={uploadingVideo}
+                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {uploadingVideo && (
+                  <p className="text-xs text-brand-teal mt-1">Uploading video to Cloudinary...</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported formats: MP4, WebM, MOV, AVI (Max 100MB each)
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Or enter Video URL"
+                  value={videoInput}
+                  onChange={(e) => setVideoInput(e.target.value)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (videoInput.trim()) {
+                        setFormData({
+                          ...formData,
+                          videos: [...formData.videos, videoInput.trim()],
+                        });
+                        setVideoInput('');
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (videoInput.trim()) {
+                      setFormData({
+                        ...formData,
+                        videos: [...formData.videos, videoInput.trim()],
+                      });
+                      setVideoInput('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition"
+                >
+                  Add URL
+                </button>
+              </div>
+
+              {formData.videos.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  {formData.videos.map((video, index) => (
+                    <div key={index} className="relative rounded-lg overflow-hidden border border-gray-200 bg-black">
+                      <video src={video} className="w-full h-28 object-cover" controls preload="metadata" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            videos: formData.videos.filter((_, i) => i !== index),
+                          });
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs z-10"
                       >
                         ×
                       </button>

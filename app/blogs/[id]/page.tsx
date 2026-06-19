@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -64,7 +64,7 @@ export default function BlogDetailPage() {
 
       <article>
         <div className="relative h-[45vh] min-h-[320px] mt-16">
-          <Image
+          <SafeImage
             src={blog.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&h=600&fit=crop'}
             alt={blog.title}
             fill

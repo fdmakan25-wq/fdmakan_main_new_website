@@ -8,14 +8,14 @@ interface LogoProps {
 export default function Logo({ size = 'navbar', light = false }: LogoProps) {
   const sizeConfig = {
     navbar: {
-      width: 360,
-      height: 120,
-      className: 'h-[6.5rem] md:h-28 w-auto object-contain transition-all duration-500',
+      width: 280,
+      height: 90,
+      className: 'h-14 md:h-16 w-auto object-contain transition-all duration-500',
     },
     footer: {
-      width: 180,
-      height: 72,
-      className: 'h-16 w-auto object-contain',
+      width: 240,
+      height: 96,
+      className: 'h-20 md:h-24 w-auto object-contain',
     },
   };
 
@@ -24,7 +24,7 @@ export default function Logo({ size = 'navbar', light = false }: LogoProps) {
   return (
     <div className="flex items-center p-0 m-0 leading-none">
       <Image
-        src="/fd_makan_logo-removebg-preview.png"
+        src="/fd_makan-wobg.png"
         alt="FD MAKAN Logo"
         width={config.width}
         height={config.height}

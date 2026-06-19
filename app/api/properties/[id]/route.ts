@@ -44,6 +44,7 @@ export async function PUT(
       description,
       price,
       developer,
+      city,
       location,
       bedrooms,
       bathrooms,
@@ -84,6 +85,7 @@ export async function PUT(
     if (description) updateData.description = description;
     if (price !== undefined) updateData.price = parseFloat(price);
     if (developer) updateData.developer = developer;
+    if (city) updateData.city = city;
     if (location) updateData.location = location;
     if (bedrooms !== undefined) updateData.bedrooms = parseInt(bedrooms);
     if (bathrooms !== undefined) updateData.bathrooms = parseInt(bathrooms);

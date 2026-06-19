@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -169,7 +169,7 @@ export default function Hero() {
   const currentBanner = banners[currentSlide] || banners[0];
 
   return (
-    <section ref={sectionRef} className="relative h-[165vh] bg-[#111827]">
+    <section ref={sectionRef} id="hero-section" className="relative h-[165vh] bg-[#111827]">
       <div
         className="sticky top-0 h-screen w-full overflow-hidden will-change-transform transition-[border-radius,margin,width] duration-150 ease-out"
         style={{
@@ -183,7 +183,7 @@ export default function Hero() {
       >
         {/* Sliding backgrounds */}
         {banners.map((banner, index) => (
-          <Image
+          <SafeImage
             key={banner._id || `banner-${index}`}
             src={banner.image}
             alt={banner.title}

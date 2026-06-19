@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 interface Project {
   id: string | number;
@@ -27,7 +27,7 @@ function ProjectCard({ project }: { project: Project }) {
       className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer h-full"
     >
       <div className="relative h-64 overflow-hidden">
-        <Image
+        <SafeImage
           src={project.image}
           alt={project.name}
           fill

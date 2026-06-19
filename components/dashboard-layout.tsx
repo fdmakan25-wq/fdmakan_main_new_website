@@ -15,6 +15,7 @@ const tabs = [
   { id: 'properties', label: 'Properties', icon: '🏠' },
   { id: 'orders', label: 'Enquiries', icon: '📋' },
   { id: 'developers', label: 'Developers', icon: '🏢' },
+  { id: 'locations', label: 'Locations', icon: '📍' },
   { id: 'blogs', label: 'Blogs', icon: '📝' },
   { id: 'banners', label: 'Banners', icon: '🖼️' },
   { id: 'customers', label: 'Customers', icon: '👥' },

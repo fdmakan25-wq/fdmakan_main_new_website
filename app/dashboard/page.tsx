@@ -8,6 +8,7 @@ import OrdersTab from '@/components/dashboard/OrdersTab';
 import DevelopersTab from '@/components/dashboard/DevelopersTab';
 import BlogsTab from '@/components/dashboard/BlogsTab';
 import BannersTab from '@/components/dashboard/BannersTab';
+import LocationsTab from '@/components/dashboard/LocationsTab';
 import CustomersTab from '@/components/dashboard/CustomersTab';
 
 export default function DashboardPage() {
@@ -27,6 +28,8 @@ export default function DashboardPage() {
         return <BlogsTab />;
       case 'banners':
         return <BannersTab />;
+      case 'locations':
+        return <LocationsTab />;
       case 'customers':
         return <CustomersTab />;
       default:

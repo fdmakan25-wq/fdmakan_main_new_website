@@ -11,18 +11,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FD MAKAN - Seal The Deal | Real Estate Excellence",
-  description: "FD MAKAN - Your trusted partner in real estate. Find your dream property, sell with confidence, and seal the deal with our expert team.",
+  title: "FD Makan",
+  description: "FD Makan - Your trusted partner in real estate. Find your dream property, sell with confidence, and seal the deal with our expert team.",
   icons: {
-    icon: [
-      { url: '/fd_makan_logo-removebg-preview.png', type: 'image/png' },
-      { url: '/fd_makan_logo-removebg-preview.png', sizes: '32x32', type: 'image/png' },
-      { url: '/fd_makan_logo-removebg-preview.png', sizes: '192x192', type: 'image/png' },
-    ],
+    icon: '/fd_makan_logo-removebg-preview.png',
     shortcut: '/fd_makan_logo-removebg-preview.png',
-    apple: [
-      { url: '/fd_makan_logo-removebg-preview.png', sizes: '180x180', type: 'image/png' },
-    ],
+    apple: '/fd_makan_logo-removebg-preview.png',
   },
 };
 
