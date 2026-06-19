@@ -5,9 +5,9 @@ import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_OFFICE, CONTACT_BUILD
 export default function Footer() {
   return (
     <footer id="footer" className="bg-navy-blue text-white py-14 md:py-16 relative overflow-hidden z-10 text-sm">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
-          <div className="flex flex-col items-start text-left sm:col-span-2 lg:col-span-1 max-w-xs lg:max-w-[260px]">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12 xl:gap-16">
+          <div className="flex w-full flex-col items-start text-left lg:w-[280px] lg:flex-shrink-0 xl:w-[300px]">
             <div className="mb-4 brightness-0 invert">
               <Logo size="footer" />
             </div>
@@ -33,6 +33,7 @@ export default function Footer() {
             </div>
           </div>
 
+          <div className="grid flex-1 grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10 min-w-0">
           <div>
             <h4 className="text-base font-semibold mb-5 text-white tracking-wide border-b-2 border-brand-red inline-block pb-1">Quick Links</h4>
             <ul className="space-y-2.5">
@@ -123,6 +124,7 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
+          </div>
           </div>
         </div>
 
