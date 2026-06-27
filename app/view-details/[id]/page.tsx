@@ -19,6 +19,7 @@ import {
   formatPropertyPrice,
   getListingBadgeLabel,
   isStructuredListing,
+  normalizePricingRows,
 } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
 import PropertyListingDetails from '@/components/property/PropertyListingDetails';
@@ -246,15 +247,15 @@ export default function PropertyDetailsPage() {
   const defaultAmenities = property.amenities || ['Swimming Pool', 'Gymnasium', 'Clubhouse', 'Parking', 'Security'];
   const defaultFacilities = property.facilities || ['Lift', 'Gas Pipeline', 'Power Back Up', 'Parking', 'Security System'];
 
-  const pricingList = property.pricing && property.pricing.length > 0
-    ? property.pricing
-    : property.price > 0
-      ? [{
-          type: getPropertyTypeLabel(property.propertyType || '') || 'Standard',
-          carpetArea: property.area ? `${property.area} sq.ft` : '—',
-          price: formatPropertyPrice(property.price, property.listingFor, property.pricing),
-        }]
-      : [];
+  const pricingList = normalizePricingRows(
+    property.price,
+    property.listingFor,
+    property.pricing,
+    {
+      type: getPropertyTypeLabel(property.propertyType || '') || 'Standard',
+      carpetArea: property.area ? `${property.area} sq.ft` : '—',
+    }
+  );
 
   const isStructured = isStructuredListing(property);
   const isRentListing = property.listingFor === 'rent';

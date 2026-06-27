@@ -8,6 +8,7 @@ import { OPEN_SIDES_OPTIONS } from '@/lib/residential-house-sale-fields';
 export type YesNo = 'yes' | 'no' | '';
 
 export interface ResidentialLandPlotSaleFields extends SaleListingCommonFields {
+  floorsAllowedConstruction: string;
   openSides: string;
   roadWidth: string;
   roadWidthUnit: string;
@@ -27,6 +28,7 @@ export { OPEN_SIDES_OPTIONS };
 export function getResidentialLandPlotSaleDefaults(): ResidentialLandPlotSaleFields {
   return {
     ...getSaleListingCommonDefaults(),
+    floorsAllowedConstruction: '',
     openSides: '',
     roadWidth: '',
     roadWidthUnit: 'Meters',

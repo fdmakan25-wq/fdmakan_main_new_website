@@ -15,6 +15,8 @@ import {
 } from '@/lib/commercial-office-space-sale-fields';
 import { SaleTransactionSection } from '@/components/dashboard/categories/SaleListingSharedSections';
 import SegmentButtonGroup from '@/components/dashboard/form/SegmentButtonGroup';
+import MeasuredInput from '@/components/dashboard/form/MeasuredInput';
+import { BUILDING_AREA_UNIT_OPTIONS } from '@/lib/dashboard-measurements';
 
 export const FURNISHED_OPTIONS: { value: OfficeFurnishedStatus; label: string }[] = [
   { value: 'furnished', label: 'Furnished' },
@@ -170,33 +172,20 @@ export function CommercialAreaSection({
   fields: AreaFields;
   update: (patch: Partial<AreaFields>) => void;
 }) {
-  const areaUnitSelect = (value: string, onUnitChange: (unit: string) => void) => (
-    <select
-      value={value}
-      onChange={(e) => onUnitChange(e.target.value)}
-      className="border-0 border-l border-gray-300 bg-transparent text-sm text-gray-700 pl-2 pr-1 focus:ring-0"
-    >
-      <option value="Sq-ft">Sq-ft</option>
-      <option value="Sq-m">Sq-m</option>
-    </select>
-  );
-
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Area</h3>
       <div className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Super Area</label>
-          <div className="flex items-center border-b border-gray-300">
-            <input
-              type="text"
-              placeholder="Super Area"
-              value={fields.superArea}
-              onChange={(e) => update({ superArea: e.target.value })}
-              className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-            />
-            {areaUnitSelect(fields.superAreaUnit, (unit) => update({ superAreaUnit: unit }))}
-          </div>
+          <MeasuredInput
+            value={fields.superArea}
+            onValueChange={(value) => update({ superArea: value })}
+            unit={fields.superAreaUnit}
+            onUnitChange={(unit) => update({ superAreaUnit: unit })}
+            unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+            placeholder="Super Area"
+          />
         </div>
 
         <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -212,31 +201,27 @@ export function CommercialAreaSection({
         {fields.showBuiltUpArea && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Built Up Area</label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Built Up Area"
-                value={fields.builtUpArea}
-                onChange={(e) => update({ builtUpArea: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              {areaUnitSelect(fields.builtUpAreaUnit, (unit) => update({ builtUpAreaUnit: unit }))}
-            </div>
+            <MeasuredInput
+              value={fields.builtUpArea}
+              onValueChange={(value) => update({ builtUpArea: value })}
+              unit={fields.builtUpAreaUnit}
+              onUnitChange={(unit) => update({ builtUpAreaUnit: unit })}
+              unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+              placeholder="Built Up Area"
+            />
           </div>
         )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Carpet Area</label>
-          <div className="flex items-center border-b border-gray-300">
-            <input
-              type="text"
-              placeholder="Carpet Area"
-              value={fields.carpetArea}
-              onChange={(e) => update({ carpetArea: e.target.value })}
-              className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-            />
-            {areaUnitSelect(fields.carpetAreaUnit, (unit) => update({ carpetAreaUnit: unit }))}
-          </div>
+          <MeasuredInput
+            value={fields.carpetArea}
+            onValueChange={(value) => update({ carpetArea: value })}
+            unit={fields.carpetAreaUnit}
+            onUnitChange={(unit) => update({ carpetAreaUnit: unit })}
+            unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+            placeholder="Carpet Area"
+          />
         </div>
       </div>
     </div>

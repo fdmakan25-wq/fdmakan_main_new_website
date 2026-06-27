@@ -8,6 +8,12 @@ import {
   type YesNo,
 } from '@/lib/industrial-land-sale-fields';
 import { YesNoGroup } from '@/components/dashboard/categories/sale-commercial-form-parts';
+import MeasuredInput, { PlotLengthBreadthFields } from '@/components/dashboard/form/MeasuredInput';
+import {
+  PLOT_AREA_UNIT_OPTIONS,
+  PLOT_DIMENSION_UNIT_OPTIONS,
+  ROAD_WIDTH_UNIT_OPTIONS,
+} from '@/lib/dashboard-measurements';
 
 interface SaleIndustrialLandFormProps {
   fields: Record<string, unknown>;
@@ -55,16 +61,14 @@ export default function SaleIndustrialLandForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Width of road facing the plot
             </label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Road width"
-                value={fields.roadWidth}
-                onChange={(e) => update({ roadWidth: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              <span className="text-sm text-gray-500 pl-2">Meters</span>
-            </div>
+            <MeasuredInput
+              value={fields.roadWidth}
+              onValueChange={(value) => update({ roadWidth: value })}
+              unit={fields.roadWidthUnit}
+              onUnitChange={(unit) => update({ roadWidthUnit: unit })}
+              unitOptions={ROAD_WIDTH_UNIT_OPTIONS}
+              placeholder="Road width"
+            />
           </div>
 
           <YesNoGroup
@@ -87,54 +91,25 @@ export default function SaleIndustrialLandForm({
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Plot Area</label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Plot Area"
-                value={fields.plotArea}
-                onChange={(e) => update({ plotArea: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              <select
-                value={fields.plotAreaUnit}
-                onChange={(e) => update({ plotAreaUnit: e.target.value })}
-                className="border-0 border-l border-gray-300 bg-transparent text-sm text-gray-700 pl-2 pr-1 focus:ring-0"
-              >
-                <option value="Sq-yrd">Sq-yrd</option>
-                <option value="Sq-ft">Sq-ft</option>
-                <option value="Sq-m">Sq-m</option>
-              </select>
-            </div>
+            <MeasuredInput
+              value={fields.plotArea}
+              onValueChange={(value) => update({ plotArea: value })}
+              unit={fields.plotAreaUnit}
+              onUnitChange={(unit) => update({ plotAreaUnit: unit })}
+              unitOptions={PLOT_AREA_UNIT_OPTIONS}
+              placeholder="Plot Area"
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Plot Length</label>
-              <div className="flex items-center border-b border-gray-300">
-                <input
-                  type="text"
-                  placeholder="Plot Length"
-                  value={fields.plotLength}
-                  onChange={(e) => update({ plotLength: e.target.value })}
-                  className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-                />
-                <span className="text-sm text-gray-500 pl-2">{fields.plotDimensionUnit}</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Plot Breadth</label>
-              <div className="flex items-center border-b border-gray-300">
-                <input
-                  type="text"
-                  placeholder="Plot Breadth"
-                  value={fields.plotBreadth}
-                  onChange={(e) => update({ plotBreadth: e.target.value })}
-                  className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-                />
-                <span className="text-sm text-gray-500 pl-2">{fields.plotDimensionUnit}</span>
-              </div>
-            </div>
-          </div>
+          <PlotLengthBreadthFields
+            length={fields.plotLength}
+            breadth={fields.plotBreadth}
+            dimensionUnit={fields.plotDimensionUnit}
+            onLengthChange={(value) => update({ plotLength: value })}
+            onBreadthChange={(value) => update({ plotBreadth: value })}
+            onDimensionUnitChange={(unit) => update({ plotDimensionUnit: unit })}
+            unitOptions={PLOT_DIMENSION_UNIT_OPTIONS}
+          />
 
           <label className="inline-flex items-center gap-2 cursor-pointer">
             <input

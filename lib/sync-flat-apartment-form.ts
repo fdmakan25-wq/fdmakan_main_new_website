@@ -2,6 +2,7 @@ import {
   bedroomCountFromValue,
   parseFlatApartmentSaleFields,
 } from '@/lib/flat-apartment-sale-fields';
+import { formatListingPriceLabel } from '@/lib/sale-listing-common';
 
 type FormSlice = {
   price: number;
@@ -51,18 +52,21 @@ export function buildFlatApartmentSubmitPayload(formData: FormSlice): FormSlice 
 
   let pricing = formData.pricing;
   if (flat.bedrooms && (flat.expectedPrice || flat.basicPricePerSqft)) {
-    const priceLabel = flat.expectedPrice
-      ? `₹ ${flat.expectedPrice}`
-      : flat.basicPricePerSqft
-        ? `₹ ${flat.basicPricePerSqft}/sqft`
-        : '';
-    pricing = [
-      {
-        type: `${flat.bedrooms} BHK`,
-        carpetArea: flat.carpetArea ? `${flat.carpetArea} ${flat.carpetAreaUnit}` : '',
-        price: priceLabel,
-      },
-    ];
+    const priceLabel = formatListingPriceLabel(
+      flat.expectedPrice,
+      flat.basicPricePerSqft,
+      areaNum,
+      price
+    );
+    if (priceLabel) {
+      pricing = [
+        {
+          type: `${flat.bedrooms} BHK`,
+          carpetArea: flat.carpetArea ? `${flat.carpetArea} ${flat.carpetAreaUnit}` : '',
+          price: priceLabel,
+        },
+      ];
+    }
   }
 
   return {

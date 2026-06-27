@@ -2,6 +2,10 @@
 
 import { getNumericOptions, type SaleListingCommonFields } from '@/lib/sale-listing-common';
 import {
+  getFloorPlusOptions,
+  TOTAL_FLOORS_SEGMENT_MAX,
+} from '@/lib/flat-apartment-sale-fields';
+import {
   LAND_ZONE_OPTIONS,
   parseIndustrialBuildingSaleFields,
   type IndustrialBuildingSaleFields,
@@ -17,6 +21,8 @@ import {
   SaleTransactionSection,
   YesNoGroup,
 } from '@/components/dashboard/categories/sale-commercial-form-parts';
+import MeasuredInput from '@/components/dashboard/form/MeasuredInput';
+import { BUILDING_AREA_UNIT_OPTIONS, PLOT_AREA_UNIT_OPTIONS } from '@/lib/dashboard-measurements';
 
 interface SaleIndustrialBuildingFormProps {
   fields: Record<string, unknown>;
@@ -41,19 +47,7 @@ export default function SaleIndustrialBuildingForm({
     update(patch);
   };
 
-  const totalFloorPlusOptions = getNumericOptions(30).slice(13);
-
-  const areaUnitSelect = (value: string, onUnitChange: (unit: string) => void, options: string[]) => (
-    <select
-      value={value}
-      onChange={(e) => onUnitChange(e.target.value)}
-      className="border-0 border-l border-gray-300 bg-transparent text-sm text-gray-700 pl-2 pr-1 focus:ring-0"
-    >
-      {options.map((unit) => (
-        <option key={unit} value={unit}>{unit}</option>
-      ))}
-    </select>
-  );
+  const totalFloorPlusOptions = getFloorPlusOptions(TOTAL_FLOORS_SEGMENT_MAX);
 
   return (
     <div className="space-y-8">
@@ -78,11 +72,11 @@ export default function SaleIndustrialBuildingForm({
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Features</h3>
         <SegmentButtonGroup
           label="Total Floors"
-          options={[...getNumericOptions(13), '13+']}
+          options={[...getNumericOptions(TOTAL_FLOORS_SEGMENT_MAX), '13+']}
           value={fields.totalFloors}
           onChange={(value) => update({ totalFloors: value })}
           plusOptions={totalFloorPlusOptions}
-          plusValue={parseInt(fields.totalFloors, 10) > 13 ? fields.totalFloors : ''}
+          plusValue={parseInt(fields.totalFloors, 10) > TOTAL_FLOORS_SEGMENT_MAX ? fields.totalFloors : ''}
           onPlusChange={(value) => update({ totalFloors: value })}
         />
       </div>
@@ -92,19 +86,14 @@ export default function SaleIndustrialBuildingForm({
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Covered Area</label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Covered Area"
-                value={fields.coveredArea}
-                onChange={(e) => update({ coveredArea: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              {areaUnitSelect(fields.coveredAreaUnit, (unit) => update({ coveredAreaUnit: unit }), [
-                'Sq-ft',
-                'Sq-m',
-              ])}
-            </div>
+            <MeasuredInput
+              value={fields.coveredArea}
+              onValueChange={(value) => update({ coveredArea: value })}
+              unit={fields.coveredAreaUnit}
+              onUnitChange={(unit) => update({ coveredAreaUnit: unit })}
+              unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+              placeholder="Covered Area"
+            />
           </div>
 
           {!fields.showPlotArea ? (
@@ -121,20 +110,14 @@ export default function SaleIndustrialBuildingForm({
           ) : (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Plot Area</label>
-              <div className="flex items-center border-b border-gray-300">
-                <input
-                  type="text"
-                  placeholder="Plot Area"
-                  value={fields.plotArea}
-                  onChange={(e) => update({ plotArea: e.target.value })}
-                  className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-                />
-                {areaUnitSelect(fields.plotAreaUnit, (unit) => update({ plotAreaUnit: unit }), [
-                  'Sq-yrd',
-                  'Sq-ft',
-                  'Sq-m',
-                ])}
-              </div>
+              <MeasuredInput
+                value={fields.plotArea}
+                onValueChange={(value) => update({ plotArea: value })}
+                unit={fields.plotAreaUnit}
+                onUnitChange={(unit) => update({ plotAreaUnit: unit })}
+                unitOptions={PLOT_AREA_UNIT_OPTIONS}
+                placeholder="Plot Area"
+              />
             </div>
           )}
         </div>

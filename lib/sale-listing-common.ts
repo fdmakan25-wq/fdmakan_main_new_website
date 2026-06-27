@@ -1,3 +1,9 @@
+import {
+  formatCalculatedPriceLabel,
+  formatIndianPriceShort,
+  parseIndianPriceValue,
+} from '@/lib/property-details-display';
+
 export type TransactionType = 'new' | 'resale' | '';
 export type PossessionStatus = 'under-construction' | 'ready-to-move' | '';
 
@@ -66,6 +72,26 @@ export function getYearOptions() {
 
 export function getNumericOptions(count: number) {
   return Array.from({ length: count }, (_, i) => String(i + 1));
+}
+
+export function formatListingPriceLabel(
+  expectedPrice: string,
+  basicPricePerSqft: string,
+  areaNum: number,
+  calculatedPrice: number
+): string {
+  if (expectedPrice.trim()) {
+    const parsed = parseIndianPriceValue(expectedPrice);
+    if (parsed > 0) return formatIndianPriceShort(parsed);
+    return expectedPrice.startsWith('₹') ? expectedPrice : `₹ ${expectedPrice}`;
+  }
+  if (basicPricePerSqft.trim() && calculatedPrice > 0) {
+    return formatCalculatedPriceLabel(calculatedPrice);
+  }
+  if (basicPricePerSqft.trim()) {
+    return `₹ ${basicPricePerSqft}/sqft`;
+  }
+  return '';
 }
 
 export function getSaleListingCommonDefaults(): SaleListingCommonFields {
@@ -161,18 +187,21 @@ export function buildSaleListingSyncPayload(
 
   let pricing = formData.pricing;
   if (pricingLabel && (common.expectedPrice || common.basicPricePerSqft)) {
-    const priceLabel = common.expectedPrice
-      ? `₹ ${common.expectedPrice}`
-      : common.basicPricePerSqft
-        ? `₹ ${common.basicPricePerSqft}/sqft`
-        : '';
-    pricing = [
-      {
-        type: pricingLabel,
-        carpetArea: areaLabel,
-        price: priceLabel,
-      },
-    ];
+    const priceLabel = formatListingPriceLabel(
+      common.expectedPrice,
+      common.basicPricePerSqft,
+      areaNum,
+      price
+    );
+    if (priceLabel) {
+      pricing = [
+        {
+          type: pricingLabel,
+          carpetArea: areaLabel,
+          price: priceLabel,
+        },
+      ];
+    }
   }
 
   return {

@@ -13,6 +13,11 @@ import {
   SalePriceSection,
   SaleTransactionSection,
 } from '@/components/dashboard/categories/SaleListingSharedSections';
+import MeasuredInput from '@/components/dashboard/form/MeasuredInput';
+import {
+  PLOT_AREA_UNIT_OPTIONS,
+  ROAD_WIDTH_UNIT_OPTIONS,
+} from '@/lib/dashboard-measurements';
 
 interface SaleResidentialHouseFormProps {
   fields: Record<string, unknown>;
@@ -36,17 +41,6 @@ export default function SaleResidentialHouseForm({
   const updateCommon = (patch: Partial<SaleListingCommonFields>) => {
     update(patch);
   };
-
-  const areaUnitSelect = (value: string, onUnitChange: (unit: string) => void) => (
-    <select
-      value={value}
-      onChange={(e) => onUnitChange(e.target.value)}
-      className="border-0 border-l border-gray-300 bg-transparent text-sm text-gray-700 pl-2 pr-1 focus:ring-0"
-    >
-      <option value="Sq-ft">Sq-ft</option>
-      <option value="Sq-m">Sq-m</option>
-    </select>
-  );
 
   return (
     <div className="space-y-8">
@@ -86,16 +80,14 @@ export default function SaleResidentialHouseForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Width of road facing the plot
             </label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Road width"
-                value={fields.roadWidth}
-                onChange={(e) => update({ roadWidth: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              <span className="text-sm text-gray-500 pl-2">Meters</span>
-            </div>
+            <MeasuredInput
+              value={fields.roadWidth}
+              onValueChange={(value) => update({ roadWidth: value })}
+              unit={fields.roadWidthUnit}
+              onUnitChange={(unit) => update({ roadWidthUnit: unit })}
+              unitOptions={ROAD_WIDTH_UNIT_OPTIONS}
+              placeholder="Road width"
+            />
           </div>
         </div>
       </div>
@@ -106,16 +98,14 @@ export default function SaleResidentialHouseForm({
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Plot Area</label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Plot Area"
-                value={fields.plotArea}
-                onChange={(e) => update({ plotArea: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              {areaUnitSelect(fields.plotAreaUnit, (unit) => update({ plotAreaUnit: unit }))}
-            </div>
+            <MeasuredInput
+              value={fields.plotArea}
+              onValueChange={(value) => update({ plotArea: value })}
+              unit={fields.plotAreaUnit}
+              onUnitChange={(unit) => update({ plotAreaUnit: unit })}
+              unitOptions={PLOT_AREA_UNIT_OPTIONS}
+              placeholder="Plot Area"
+            />
           </div>
 
           <div>

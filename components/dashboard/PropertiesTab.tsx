@@ -168,6 +168,8 @@ function getSaleCategoryDefaultsForEdit(property: Property): Record<string, unkn
 }
 import PropertyCategoryFields from '@/components/dashboard/PropertyCategoryFields';
 import SegmentButtonGroup from '@/components/dashboard/form/SegmentButtonGroup';
+import { formatPropertyPrice } from '@/lib/property-details-display';
+import { handleNumericInputChange } from '@/lib/dashboard-measurements';
 
 interface Property {
   _id: string;
@@ -415,7 +417,7 @@ export default function PropertiesTab() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{property.price.toLocaleString()}
+                      {formatPropertyPrice(property.price, property.listingFor, property.pricing)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
@@ -590,14 +592,21 @@ function PropertyFormModal({
       price: '',
     });
   };
-  const [connectivityInput, setConnectivityInput] = useState({ category: 'commute', name: '', distance: '', time: '' });
+  const [connectivityInput, setConnectivityInput] = useState({
+    category: 'commute',
+    name: '',
+    distance: '',
+    distanceUnit: 'km',
+    time: '',
+    timeUnit: 'min',
+  });
 
   const addConnectivityItem = () => {
     if (!connectivityInput.name || !connectivityInput.distance || !connectivityInput.time) return;
     const newItem = {
       name: connectivityInput.name,
-      distance: connectivityInput.distance,
-      time: connectivityInput.time,
+      distance: `${connectivityInput.distance} ${connectivityInput.distanceUnit}`,
+      time: `${connectivityInput.time} ${connectivityInput.timeUnit}`,
     };
     setFormData({
       ...formData,
@@ -615,7 +624,9 @@ function PropertyFormModal({
       category: connectivityInput.category,
       name: '',
       distance: '',
+      distanceUnit: 'km',
       time: '',
+      timeUnit: 'min',
     });
   };
 
@@ -1817,31 +1828,66 @@ function PropertyFormModal({
                     className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
                   />
                 </div>
-                <div className="w-full sm:w-28">
+                <div className="w-full sm:flex-1 sm:min-w-[160px]">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Distance</label>
-                  <input
-                    type="text"
-                    placeholder="1.7 km"
-                    value={connectivityInput.distance}
-                    onChange={(e) => setConnectivityInput({ ...connectivityInput, distance: e.target.value })}
-                    className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                  />
-                </div>
-                <div className="w-full sm:w-24">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
-                  <input
-                    type="text"
-                    placeholder="7 mins"
-                    value={connectivityInput.time}
-                    onChange={(e) => setConnectivityInput({ ...connectivityInput, time: e.target.value })}
-                    className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addConnectivityItem();
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="1.7"
+                      value={connectivityInput.distance}
+                      onChange={(e) =>
+                        handleNumericInputChange(e.target.value, (distance) =>
+                          setConnectivityInput({ ...connectivityInput, distance })
+                        )
                       }
-                    }}
-                  />
+                      className="flex-1 min-w-0 text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                    />
+                    <select
+                      value={connectivityInput.distanceUnit}
+                      onChange={(e) =>
+                        setConnectivityInput({ ...connectivityInput, distanceUnit: e.target.value })
+                      }
+                      className="w-16 text-sm px-1.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="km">km</option>
+                      <option value="m">m</option>
+                      <option value="mi">mi</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="w-full sm:flex-1 sm:min-w-[140px]">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="7"
+                      value={connectivityInput.time}
+                      onChange={(e) =>
+                        handleNumericInputChange(e.target.value, (time) =>
+                          setConnectivityInput({ ...connectivityInput, time })
+                        )
+                      }
+                      className="flex-1 min-w-0 text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addConnectivityItem();
+                        }
+                      }}
+                    />
+                    <select
+                      value={connectivityInput.timeUnit}
+                      onChange={(e) =>
+                        setConnectivityInput({ ...connectivityInput, timeUnit: e.target.value })
+                      }
+                      className="w-16 text-sm px-1.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="min">min</option>
+                      <option value="hr">hr</option>
+                    </select>
+                  </div>
                 </div>
                 <button
                   type="button"

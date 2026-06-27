@@ -2,6 +2,10 @@
 
 import { getNumericOptions, type SaleListingCommonFields } from '@/lib/sale-listing-common';
 import {
+  getFloorPlusOptions,
+  TOTAL_FLOORS_SEGMENT_MAX,
+} from '@/lib/flat-apartment-sale-fields';
+import {
   CABIN_MEETING_ROOM_OPTIONS,
   FLOOR_NO_OPTIONS,
   parseCommercialOfficeSpaceSaleFields,
@@ -42,8 +46,8 @@ export default function SaleCommercialOfficeSpaceForm({
     update(patch);
   };
 
-  const floorPlusOptions = getNumericOptions(20).slice(5);
-  const totalFloorPlusOptions = getNumericOptions(30).slice(13);
+  const floorPlusOptions = getFloorPlusOptions(5);
+  const totalFloorPlusOptions = getFloorPlusOptions(TOTAL_FLOORS_SEGMENT_MAX);
   const washroomPlusOptions = ['4', '5', '6'];
 
   return (
@@ -69,11 +73,11 @@ export default function SaleCommercialOfficeSpaceForm({
 
           <SegmentButtonGroup
             label="Total Floors"
-            options={[...getNumericOptions(13), '13+']}
+            options={[...getNumericOptions(TOTAL_FLOORS_SEGMENT_MAX), '13+']}
             value={fields.totalFloors}
             onChange={(value) => update({ totalFloors: value })}
             plusOptions={totalFloorPlusOptions}
-            plusValue={parseInt(fields.totalFloors, 10) > 13 ? fields.totalFloors : ''}
+            plusValue={parseInt(fields.totalFloors, 10) > TOTAL_FLOORS_SEGMENT_MAX ? fields.totalFloors : ''}
             onPlusChange={(value) => update({ totalFloors: value })}
           />
 

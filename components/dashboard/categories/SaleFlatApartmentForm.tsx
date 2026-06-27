@@ -7,6 +7,7 @@ import {
   BROKERAGE_OPTIONS,
   FLOOR_NO_OPTIONS,
   FURNISHED_OPTIONS,
+  getFloorPlusOptions,
   getMonthOptions,
   getNumericOptions,
   getYearOptions,
@@ -15,9 +16,12 @@ import {
   PHOTO_TABS,
   SOCIETY_FLATS_OPTIONS,
   syncBedroomSizes,
+  TOTAL_FLOORS_SEGMENT_MAX,
   bedroomCountFromValue,
   type FlatApartmentSaleFields,
 } from '@/lib/flat-apartment-sale-fields';
+import MeasuredInput from '@/components/dashboard/form/MeasuredInput';
+import { BUILDING_AREA_UNIT_OPTIONS, handleNumericInputChange } from '@/lib/dashboard-measurements';
 
 interface SaleFlatApartmentFormProps {
   fields: Record<string, unknown>;
@@ -76,17 +80,6 @@ export default function SaleFlatApartmentForm({
     });
   };
 
-  const areaUnitSelect = (value: string, onUnitChange: (unit: string) => void) => (
-    <select
-      value={value}
-      onChange={(e) => onUnitChange(e.target.value)}
-      className="border-0 border-l border-gray-300 bg-transparent text-sm text-gray-700 pl-2 pr-1 focus:ring-0"
-    >
-      <option value="Sq-ft">Sq-ft</option>
-      <option value="Sq-m">Sq-m</option>
-    </select>
-  );
-
   return (
     <div className="space-y-8">
       {hideSocietyFlats ? null : (
@@ -123,24 +116,30 @@ export default function SaleFlatApartmentForm({
                     <span className="text-gray-600">Bedroom {index + 1}</span>
                     <input
                       type="text"
+                      inputMode="decimal"
                       placeholder="Length"
                       value={size.length}
                       onChange={(e) => {
-                        const next = [...fields.bedroomSizes];
-                        next[index] = { ...next[index], length: e.target.value };
-                        update({ bedroomSizes: next });
+                        handleNumericInputChange(e.target.value, (length) => {
+                          const next = [...fields.bedroomSizes];
+                          next[index] = { ...next[index], length };
+                          update({ bedroomSizes: next });
+                        });
                       }}
                       className="border border-gray-300 rounded px-2 py-1.5 text-gray-900"
                     />
                     <span className="text-gray-400 text-center">×</span>
                     <input
                       type="text"
+                      inputMode="decimal"
                       placeholder="Breadth"
                       value={size.breadth}
                       onChange={(e) => {
-                        const next = [...fields.bedroomSizes];
-                        next[index] = { ...next[index], breadth: e.target.value };
-                        update({ bedroomSizes: next });
+                        handleNumericInputChange(e.target.value, (breadth) => {
+                          const next = [...fields.bedroomSizes];
+                          next[index] = { ...next[index], breadth };
+                          update({ bedroomSizes: next });
+                        });
                       }}
                       className="border border-gray-300 rounded px-2 py-1.5 text-gray-900"
                     />
@@ -166,18 +165,18 @@ export default function SaleFlatApartmentForm({
             options={[...FLOOR_NO_OPTIONS, '5+']}
             value={fields.floorNo}
             onChange={(value) => update({ floorNo: value })}
-            plusOptions={getNumericOptions(20).slice(5)}
+            plusOptions={getFloorPlusOptions(5)}
             plusValue={parseInt(fields.floorNo, 10) > 5 ? fields.floorNo : ''}
             onPlusChange={(value) => update({ floorNo: value })}
           />
 
           <SegmentButtonGroup
             label="Total Floors"
-            options={[...getNumericOptions(13), '13+']}
+            options={[...getNumericOptions(TOTAL_FLOORS_SEGMENT_MAX), '13+']}
             value={fields.totalFloors}
             onChange={(value) => update({ totalFloors: value })}
-            plusOptions={getNumericOptions(30).slice(13)}
-            plusValue={parseInt(fields.totalFloors, 10) > 13 ? fields.totalFloors : ''}
+            plusOptions={getFloorPlusOptions(TOTAL_FLOORS_SEGMENT_MAX)}
+            plusValue={parseInt(fields.totalFloors, 10) > TOTAL_FLOORS_SEGMENT_MAX ? fields.totalFloors : ''}
             onPlusChange={(value) => update({ totalFloors: value })}
           />
 
@@ -200,24 +199,6 @@ export default function SaleFlatApartmentForm({
             plusValue={parseInt(fields.bathrooms, 10) > 3 ? fields.bathrooms : ''}
             onPlusChange={(value) => update({ bathrooms: value })}
           />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Floors Allowed for construction
-            </label>
-            <select
-              value={fields.floorsAllowedConstruction}
-              onChange={(e) => update({ floorsAllowedConstruction: e.target.value })}
-              className={underlineInputClass}
-            >
-              <option value="">Total Floor</option>
-              {getNumericOptions(50).map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 
@@ -227,16 +208,14 @@ export default function SaleFlatApartmentForm({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Super Area</label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Super Area"
-                value={fields.superArea}
-                onChange={(e) => update({ superArea: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              {areaUnitSelect(fields.superAreaUnit, (unit) => update({ superAreaUnit: unit }))}
-            </div>
+            <MeasuredInput
+              value={fields.superArea}
+              onValueChange={(value) => update({ superArea: value })}
+              unit={fields.superAreaUnit}
+              onUnitChange={(unit) => update({ superAreaUnit: unit })}
+              unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+              placeholder="Super Area"
+            />
           </div>
 
           <button
@@ -252,31 +231,27 @@ export default function SaleFlatApartmentForm({
           {fields.showBuiltUpArea && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Built Up Area</label>
-              <div className="flex items-center border-b border-gray-300">
-                <input
-                  type="text"
-                  placeholder="Built Up Area"
-                  value={fields.builtUpArea}
-                  onChange={(e) => update({ builtUpArea: e.target.value })}
-                  className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-                />
-                {areaUnitSelect(fields.builtUpAreaUnit, (unit) => update({ builtUpAreaUnit: unit }))}
-              </div>
+              <MeasuredInput
+                value={fields.builtUpArea}
+                onValueChange={(value) => update({ builtUpArea: value })}
+                unit={fields.builtUpAreaUnit}
+                onUnitChange={(unit) => update({ builtUpAreaUnit: unit })}
+                unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+                placeholder="Built Up Area"
+              />
             </div>
           )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Carpet Area</label>
-            <div className="flex items-center border-b border-gray-300">
-              <input
-                type="text"
-                placeholder="Carpet Area"
-                value={fields.carpetArea}
-                onChange={(e) => update({ carpetArea: e.target.value })}
-                className="flex-1 border-0 px-0 py-2.5 bg-transparent focus:ring-0 text-gray-900 placeholder:text-gray-400"
-              />
-              {areaUnitSelect(fields.carpetAreaUnit, (unit) => update({ carpetAreaUnit: unit }))}
-            </div>
+            <MeasuredInput
+              value={fields.carpetArea}
+              onValueChange={(value) => update({ carpetArea: value })}
+              unit={fields.carpetAreaUnit}
+              onUnitChange={(unit) => update({ carpetAreaUnit: unit })}
+              unitOptions={BUILDING_AREA_UNIT_OPTIONS}
+              placeholder="Carpet Area"
+            />
           </div>
         </div>
       </div>

@@ -18,7 +18,6 @@ export interface FlatApartmentSaleFields {
   totalFloors: string;
   furnishedStatus: FurnishedStatus;
   bathrooms: string;
-  floorsAllowedConstruction: string;
   superArea: string;
   superAreaUnit: string;
   builtUpArea: string;
@@ -63,6 +62,9 @@ export const FLOOR_NO_OPTIONS = [
   '4',
   '5',
 ];
+export const MAX_FLOOR_OPTION = 100;
+export const TOTAL_FLOORS_SEGMENT_MAX = 13;
+export const FLOOR_NO_PLUS_THRESHOLD = 5;
 export const PHOTO_TABS = [
   'Exterior View',
   'Living Room',
@@ -104,6 +106,10 @@ export function getNumericOptions(count: number, plusLabel?: string) {
   return options;
 }
 
+export function getFloorPlusOptions(fromExclusive: number, max = MAX_FLOOR_OPTION): string[] {
+  return getNumericOptions(max).slice(fromExclusive);
+}
+
 export function getFlatApartmentSaleDefaults(): FlatApartmentSaleFields {
   return {
     societyFlatsCount: '',
@@ -115,7 +121,6 @@ export function getFlatApartmentSaleDefaults(): FlatApartmentSaleFields {
     totalFloors: '',
     furnishedStatus: '',
     bathrooms: '1',
-    floorsAllowedConstruction: '',
     superArea: '',
     superAreaUnit: 'Sq-ft',
     builtUpArea: '',

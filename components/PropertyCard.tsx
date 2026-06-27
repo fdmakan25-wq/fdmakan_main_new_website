@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import { formatPropertyPrice, getListingBadgeLabel } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
@@ -41,7 +42,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   const showBedBath = (property.bedrooms ?? 0) > 0 || (property.bathrooms ?? 0) > 0 || (property.area ?? 0) > 0;
 
   return (
-    <div className="premium-card overflow-hidden group">
+    <Link
+      href={`/view-details/${displayId}`}
+      className="premium-card overflow-hidden group block cursor-pointer"
+    >
       <div className="relative h-72 w-full overflow-hidden">
         <SafeImage
           src={displayImage}
@@ -106,14 +110,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               {displayPrice}
             </div>
           </div>
-          <button
-            onClick={() => window.location.href = `/view-details/${displayId}`}
-            className="bg-brand-red text-white px-6 py-2 rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-soft-md hover:shadow-glow transform hover:-translate-y-1 text-sm"
-          >
+          <span className="inline-flex bg-brand-red text-white px-6 py-2 rounded-xl font-bold group-hover:bg-brand-red-dark transition-all shadow-soft-md group-hover:shadow-glow transform group-hover:-translate-y-1 text-sm">
             View Details
-          </button>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -126,7 +126,13 @@ function formatFieldValue(key: string, value: unknown): string | null {
     return str;
   }
 
-  if (['expectedPrice', 'monthlyRent', 'securityAmount', 'maintenanceCharges', 'bookingTokenAmount', 'basicPricePerSqft', 'floorPlcPerSqft', 'pricePerSqft', 'monthlyRent'].includes(key)) {
+  if (['expectedPrice', 'monthlyRent', 'securityAmount', 'maintenanceCharges', 'bookingTokenAmount'].includes(key)) {
+    const amount = parseIndianPriceValue(str);
+    if (amount > 0) return formatIndianPriceShort(amount);
+    return str.startsWith('₹') ? str : `₹ ${str}`;
+  }
+
+  if (['basicPricePerSqft', 'floorPlcPerSqft', 'pricePerSqft'].includes(key)) {
     return str.startsWith('₹') ? str : `₹ ${str}`;
   }
 
@@ -253,19 +259,121 @@ export function buildPropertyDisplaySections(property: {
   return sections;
 }
 
+export function parseIndianPriceValue(value: string | number): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (!value) return 0;
+
+  const normalized = value.trim().toLowerCase();
+  if (/(\d[\d.,]*)\s*(cr|crore)\b/.test(normalized)) {
+    const num = parseFloat(normalized.replace(/[^\d.]/g, ''));
+    return num ? num * 10000000 : 0;
+  }
+  if (/(\d[\d.,]*)\s*(lac|lakh)\b/.test(normalized)) {
+    const num = parseFloat(normalized.replace(/[^\d.]/g, ''));
+    return num ? num * 100000 : 0;
+  }
+
+  const digitsOnly = value.replace(/[^\d.]/g, '');
+  const num = parseFloat(digitsOnly);
+  return Number.isFinite(num) ? num : 0;
+}
+
+/** Compact display: ₹ 57.07 Lac, ₹ 1.25 Cr — full `price` stays in DB for EMI. */
+export function formatIndianPriceShort(amount: number): string {
+  if (!amount || amount <= 0) return '';
+
+  const abs = Math.abs(amount);
+  if (abs >= 10000000) {
+    return `₹ ${(amount / 10000000).toFixed(2)} Cr`;
+  }
+  if (abs >= 100000) {
+    return `₹ ${(amount / 100000).toFixed(2)} Lac`;
+  }
+  return formatInrCurrency(amount);
+}
+
+export function formatInrCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export function formatCalculatedPriceLabel(amount: number): string {
+  if (!amount || amount <= 0) return '';
+  return formatIndianPriceShort(amount);
+}
+
+function isRateBasedPriceLabel(value?: string): boolean {
+  if (!value) return false;
+  return /\/\s*sq[-.]?ft|per\s*sq/i.test(value);
+}
+
+export function normalizePricingRows(
+  price: number,
+  listingFor?: string,
+  pricing?: Array<{ type: string; carpetArea?: string; price?: string }>,
+  fallback?: { type?: string; carpetArea?: string }
+) {
+  const formatted = formatPropertyPrice(price, listingFor, pricing);
+  const formatRowPrice = (rowPrice?: string) => {
+    if (isRateBasedPriceLabel(rowPrice)) {
+      return price > 0 ? formatted : rowPrice || formatted;
+    }
+    const parsed = rowPrice ? parseIndianPriceValue(rowPrice) : 0;
+    if (parsed > 0) {
+      const short = formatIndianPriceShort(parsed);
+      return listingFor === 'rent' ? `${short}/month` : short;
+    }
+    if (rowPrice && !isRateBasedPriceLabel(rowPrice)) return rowPrice;
+    return formatted;
+  };
+
+  if (pricing?.length) {
+    return pricing.map((row) => ({
+      type: row.type || fallback?.type || 'Standard',
+      carpetArea: row.carpetArea || fallback?.carpetArea || '—',
+      price: formatRowPrice(row.price),
+    }));
+  }
+  if (price > 0) {
+    return [
+      {
+        type: fallback?.type || 'Standard',
+        carpetArea: fallback?.carpetArea || '—',
+        price: formatted,
+      },
+    ];
+  }
+  return [];
+}
+
 export function formatPropertyPrice(
   price: number,
   listingFor?: string,
   pricing?: Array<{ price?: string }>
 ): string {
-  if (pricing?.[0]?.price) return pricing[0].price;
-  if (!price || price <= 0) return 'Price on request';
-  const formatted = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(price);
-  return listingFor === 'rent' ? `${formatted}/month` : formatted;
+  const pricingPrice = pricing?.[0]?.price?.trim();
+
+  if (price && price > 0) {
+    const formatted = formatIndianPriceShort(price);
+    return listingFor === 'rent' ? `${formatted}/month` : formatted;
+  }
+
+  if (pricingPrice && !isRateBasedPriceLabel(pricingPrice)) {
+    const parsed = parseIndianPriceValue(pricingPrice);
+    if (parsed > 0) {
+      const formatted = formatIndianPriceShort(parsed);
+      return listingFor === 'rent' ? `${formatted}/month` : formatted;
+    }
+    if (listingFor === 'rent' && !/\/month/i.test(pricingPrice)) {
+      return `${pricingPrice}/month`;
+    }
+    return pricingPrice;
+  }
+
+  return 'Price on request';
 }
 
 export function getListingBadgeLabel(listingFor?: string): string {
