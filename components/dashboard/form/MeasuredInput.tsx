@@ -2,12 +2,7 @@
 
 import { handleNumericInputChange } from '@/lib/dashboard-measurements';
 
-type UnitOptions =
-  | typeof PLOT_AREA_UNIT_OPTIONS
-  | typeof BUILDING_AREA_UNIT_OPTIONS
-  | typeof PLOT_DIMENSION_UNIT_OPTIONS
-  | typeof ROAD_WIDTH_UNIT_OPTIONS
-  | readonly string[];
+type UnitOptions = readonly string[];
 
 interface MeasuredInputProps {
   value: string;
