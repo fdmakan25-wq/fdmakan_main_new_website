@@ -23,6 +23,8 @@ interface Property {
   images?: string[];
   developer?: string;
   available?: boolean;
+  listingFor?: string;
+  propertyType?: string;
   pricing?: PricingRow[];
   showInTopSelling?: boolean;
   showInNewlyLaunched?: boolean;
@@ -266,7 +268,9 @@ function PropertiesContent() {
                       bathrooms: property.bathrooms,
                       area: property.area,
                       images: property.images,
-                      type: 'Property',
+                      listingFor: property.listingFor,
+                      propertyType: property.propertyType,
+                      pricing: property.pricing,
                     }}
                   />
                 ))}

@@ -46,6 +46,12 @@ export async function PUT(
       developer,
       city,
       location,
+      listingCity,
+      locality,
+      listingFor,
+      propertyCategory,
+      propertyType,
+      categoryFields,
       bedrooms,
       bathrooms,
       area,
@@ -87,6 +93,12 @@ export async function PUT(
     if (developer) updateData.developer = developer;
     if (city) updateData.city = city;
     if (location) updateData.location = location;
+    if (listingCity !== undefined) updateData.listingCity = listingCity;
+    if (locality !== undefined) updateData.locality = locality;
+    if (listingFor !== undefined) updateData.listingFor = listingFor;
+    if (propertyCategory !== undefined) updateData.propertyCategory = propertyCategory;
+    if (propertyType !== undefined) updateData.propertyType = propertyType;
+    if (categoryFields !== undefined) updateData.categoryFields = categoryFields;
     if (bedrooms !== undefined) updateData.bedrooms = parseInt(bedrooms);
     if (bathrooms !== undefined) updateData.bathrooms = parseInt(bathrooms);
     if (area !== undefined) updateData.area = parseInt(area);

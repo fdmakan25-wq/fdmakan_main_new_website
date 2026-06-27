@@ -11,6 +11,159 @@ import {
   DOOR_OPTIONS,
   WINDOW_OPTIONS,
 } from '@/lib/specification-options';
+import {
+  LISTING_FOR_OPTIONS,
+  getPropertyCategoryForType,
+  getPropertyTypeLabel,
+  getPropertyTypesForCategory,
+  type ListingFor,
+  type PropertyCategory,
+} from '@/lib/property-listing-options';
+import {
+  getFlatApartmentSaleDefaults,
+  SOCIETY_FLATS_OPTIONS,
+  PHOTO_TABS,
+  parseFlatApartmentSaleFields,
+} from '@/lib/flat-apartment-sale-fields';
+import { getResidentialHouseSaleDefaults } from '@/lib/residential-house-sale-fields';
+import { getResidentialLandPlotSaleDefaults } from '@/lib/residential-land-plot-sale-fields';
+import { getCommercialOfficeSpaceSaleDefaults } from '@/lib/commercial-office-space-sale-fields';
+import { getCommercialShopSaleDefaults } from '@/lib/commercial-shop-sale-fields';
+import { getCommercialLandSaleDefaults } from '@/lib/commercial-land-sale-fields';
+import { getIndustrialLandSaleDefaults } from '@/lib/industrial-land-sale-fields';
+import { getIndustrialBuildingSaleDefaults } from '@/lib/industrial-building-sale-fields';
+import { mergeSaleListingCommon } from '@/lib/sale-listing-common';
+import { getRentListingDefaults, rentListingHasPrice } from '@/lib/rent-listing-common';
+import { buildRentSubmitPayload } from '@/lib/sync-rent-listing-form';
+import {
+  buildFlatApartmentSubmitPayload,
+  flatApartmentHasPrice,
+} from '@/lib/sync-flat-apartment-form';
+import {
+  buildResidentialHouseSubmitPayload,
+  residentialHouseHasPrice,
+} from '@/lib/sync-residential-house-form';
+import {
+  buildResidentialLandPlotSubmitPayload,
+  residentialLandPlotHasPrice,
+} from '@/lib/sync-residential-land-plot-form';
+import {
+  buildCommercialOfficeSpaceSubmitPayload,
+  commercialOfficeSpaceHasPrice,
+} from '@/lib/sync-commercial-office-space-form';
+import {
+  buildCommercialShopSubmitPayload,
+  commercialShopHasPrice,
+} from '@/lib/sync-commercial-shop-form';
+import {
+  buildCommercialLandSubmitPayload,
+  buildWarehouseGodownSubmitPayload,
+  commercialLandHasPrice,
+} from '@/lib/sync-commercial-land-form';
+import {
+  buildIndustrialLandSubmitPayload,
+  industrialLandHasPrice,
+} from '@/lib/sync-industrial-land-form';
+import {
+  buildIndustrialBuildingLikeSubmitPayload,
+  industrialBuildingHasPrice,
+} from '@/lib/sync-industrial-building-form';
+
+const SALE_HOUSE_LIKE_TYPES = new Set([
+  'residential-house',
+  'villa',
+  'penthouse',
+  'studio-apartment',
+]);
+
+const SALE_COMMERCIAL_OFFICE_LIKE_TYPES = new Set([
+  'commercial-office-space',
+  'office-it-park-sez',
+]);
+
+const SALE_COMMERCIAL_LAND_LIKE_TYPES = new Set(['commercial-land', 'warehouse-godown']);
+
+const SALE_INDUSTRIAL_BUILDING_LIKE_TYPES = new Set(['industrial-building', 'industrial-shed']);
+
+function getSaleCategoryDefaults(propertyType: string, propertyName: string): Record<string, unknown> {
+  if (propertyType === 'flat-apartment') {
+    return { ...getFlatApartmentSaleDefaults(), projectSocietyName: propertyName };
+  }
+  if (SALE_HOUSE_LIKE_TYPES.has(propertyType)) {
+    return getResidentialHouseSaleDefaults();
+  }
+  if (propertyType === 'residential-land-plot') {
+    return getResidentialLandPlotSaleDefaults();
+  }
+  if (propertyType === 'commercial-office-space' || propertyType === 'office-it-park-sez') {
+    return getCommercialOfficeSpaceSaleDefaults();
+  }
+  if (propertyType === 'commercial-shop') {
+    return getCommercialShopSaleDefaults();
+  }
+  if (SALE_COMMERCIAL_LAND_LIKE_TYPES.has(propertyType)) {
+    return getCommercialLandSaleDefaults();
+  }
+  if (propertyType === 'industrial-land') {
+    return getIndustrialLandSaleDefaults();
+  }
+  if (SALE_INDUSTRIAL_BUILDING_LIKE_TYPES.has(propertyType)) {
+    return getIndustrialBuildingSaleDefaults();
+  }
+  return {};
+}
+
+function getRentCategoryDefaults(propertyType: string, propertyName: string): Record<string, unknown> {
+  return {
+    ...getSaleCategoryDefaults(propertyType, propertyName),
+    ...getRentListingDefaults(),
+  };
+}
+
+function getCategoryDefaultsForEdit(property: Property): Record<string, unknown> {
+  if (property.listingFor === 'rent') {
+    return {
+      ...getRentCategoryDefaults(property.propertyType || '', property.name),
+      ...(property.categoryFields || {}),
+    };
+  }
+  return getSaleCategoryDefaultsForEdit(property);
+}
+
+function getSaleCategoryDefaultsForEdit(property: Property): Record<string, unknown> {
+  if (property.propertyType === 'flat-apartment') {
+    return {
+      ...getFlatApartmentSaleDefaults(),
+      ...(property.categoryFields || {}),
+      projectSocietyName:
+        (property.categoryFields?.projectSocietyName as string) || property.name || '',
+    };
+  }
+  if (property.propertyType && SALE_HOUSE_LIKE_TYPES.has(property.propertyType)) {
+    return { ...getResidentialHouseSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  if (property.propertyType === 'residential-land-plot') {
+    return { ...getResidentialLandPlotSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  if (property.propertyType === 'commercial-office-space' || property.propertyType === 'office-it-park-sez') {
+    return { ...getCommercialOfficeSpaceSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  if (property.propertyType === 'commercial-shop') {
+    return { ...getCommercialShopSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  if (property.propertyType && SALE_COMMERCIAL_LAND_LIKE_TYPES.has(property.propertyType)) {
+    return { ...getCommercialLandSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  if (property.propertyType === 'industrial-land') {
+    return { ...getIndustrialLandSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  if (property.propertyType && SALE_INDUSTRIAL_BUILDING_LIKE_TYPES.has(property.propertyType)) {
+    return { ...getIndustrialBuildingSaleDefaults(), ...(property.categoryFields || {}) };
+  }
+  return property.categoryFields || {};
+}
+import PropertyCategoryFields from '@/components/dashboard/PropertyCategoryFields';
+import SegmentButtonGroup from '@/components/dashboard/form/SegmentButtonGroup';
 
 interface Property {
   _id: string;
@@ -20,6 +173,12 @@ interface Property {
   developer: string;
   location: string;
   city?: string;
+  locality?: string;
+  listingCity?: string;
+  listingFor?: ListingFor;
+  propertyCategory?: PropertyCategory | '';
+  propertyType?: string;
+  categoryFields?: Record<string, unknown>;
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
@@ -336,13 +495,23 @@ function PropertyFormModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const initialPropertyType =
+    property?.propertyType === 'all-residential' || property?.propertyType === 'all-commercial'
+      ? ''
+      : property?.propertyType || '';
+
   const [formData, setFormData] = useState({
     name: property?.name || '',
     description: property?.description || '',
     price: property?.price || 0,
     developer: property?.developer || '',
-    city: property?.city || '',
-    location: property?.location || '',
+    city: property?.city || property?.listingCity || '',
+    location: property?.location || property?.locality || '',
+    listingFor: (property?.listingFor || 'sale') as ListingFor,
+    propertyCategory: (property?.propertyCategory ||
+      getPropertyCategoryForType(initialPropertyType || property?.propertyType || '')) as PropertyCategory | '',
+    propertyType: initialPropertyType,
+    categoryFields: property ? getCategoryDefaultsForEdit(property) : {},
     available: property?.available ?? true,
     images: property?.images || [],
     videos: property?.videos || [],
@@ -419,12 +588,115 @@ function PropertyFormModal({
   };
   const [connectivityInput, setConnectivityInput] = useState({ category: 'commute', name: '', distance: '', time: '' });
 
+  const addConnectivityItem = () => {
+    if (!connectivityInput.name || !connectivityInput.distance || !connectivityInput.time) return;
+    const newItem = {
+      name: connectivityInput.name,
+      distance: connectivityInput.distance,
+      time: connectivityInput.time,
+    };
+    setFormData({
+      ...formData,
+      connectivity: {
+        ...formData.connectivity,
+        [connectivityInput.category]: [
+          ...(formData.connectivity[
+            connectivityInput.category as keyof typeof formData.connectivity
+          ] || []),
+          newItem,
+        ],
+      },
+    });
+    setConnectivityInput({
+      category: connectivityInput.category,
+      name: '',
+      distance: '',
+      time: '',
+    });
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [imageInput, setImageInput] = useState('');
   const [videoInput, setVideoInput] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
+  const [activePhotoTab, setActivePhotoTab] = useState(PHOTO_TABS[0]);
+
+  const inputClass =
+    'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white';
+
+  const handlePropertyTypeChange = (value: string) => {
+    const category = getPropertyCategoryForType(value);
+    setFormData({
+      ...formData,
+      propertyType: value,
+      propertyCategory: category,
+      categoryFields:
+        formData.listingFor === 'sale'
+          ? getSaleCategoryDefaults(value, formData.name)
+          : formData.listingFor === 'rent'
+            ? getRentCategoryDefaults(value, formData.name)
+            : {},
+    });
+  };
+
+  const isSaleFlatApartment =
+    formData.listingFor === 'sale' && formData.propertyType === 'flat-apartment';
+  const isSaleHouseLike =
+    formData.listingFor === 'sale' && SALE_HOUSE_LIKE_TYPES.has(formData.propertyType);
+  const isSaleLandPlot =
+    formData.listingFor === 'sale' &&
+    (formData.propertyType === 'residential-land-plot' ||
+      formData.propertyType === 'industrial-land' ||
+      SALE_COMMERCIAL_LAND_LIKE_TYPES.has(formData.propertyType));
+  const isSaleCommercialOfficeLike =
+    formData.listingFor === 'sale' && SALE_COMMERCIAL_OFFICE_LIKE_TYPES.has(formData.propertyType);
+  const isSaleCommercialShop =
+    formData.listingFor === 'sale' && formData.propertyType === 'commercial-shop';
+  const isSaleIndustrialBuildingLike =
+    formData.listingFor === 'sale' && SALE_INDUSTRIAL_BUILDING_LIKE_TYPES.has(formData.propertyType);
+  const isSaleCategoryListing =
+    isSaleFlatApartment ||
+    isSaleHouseLike ||
+    isSaleLandPlot ||
+    isSaleCommercialOfficeLike ||
+    isSaleCommercialShop ||
+    isSaleIndustrialBuildingLike;
+  const isRentCategoryListing =
+    formData.listingFor === 'rent' &&
+    !!formData.propertyType &&
+    formData.propertyType !== 'residential-land-plot';
+  const isCategoryListing = isSaleCategoryListing || isRentCategoryListing;
+
+  const propertyTypeOptions = getPropertyTypesForCategory(
+    formData.propertyCategory,
+    formData.listingFor
+  );
+
+  const updateCategoryFields = (categoryFields: Record<string, unknown>) => {
+    setFormData({ ...formData, categoryFields });
+  };
+
+  const flatFields = isSaleFlatApartment
+    ? parseFlatApartmentSaleFields(formData.categoryFields)
+    : null;
+
+  const addPhotoToCategory = (url: string) => {
+    const common = mergeSaleListingCommon(formData.categoryFields);
+    const current = common.photoCategories[activePhotoTab] || [];
+    updateCategoryFields({
+      ...formData.categoryFields,
+      photoCategories: {
+        ...common.photoCategories,
+        [activePhotoTab]: [...current, url],
+      },
+    });
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.includes(url) ? prev.images : [...prev.images, url],
+    }));
+  };
 
   useEffect(() => {
     if (property && !property.city && property.location && cities.length > 0) {
@@ -449,13 +721,42 @@ function PropertyFormModal({
       alert('Please enter a description');
       return;
     }
-    // Price validation - check if pricing array has entries or set default
-    if ((!formData.price || formData.price <= 0) && (!formData.pricing || formData.pricing.length === 0)) {
+    // Price validation
+    if (isSaleCategoryListing) {
+      const hasPrice =
+        (isSaleFlatApartment && flatApartmentHasPrice(formData)) ||
+        (isSaleHouseLike && residentialHouseHasPrice(formData)) ||
+        (isSaleLandPlot &&
+          (formData.propertyType === 'residential-land-plot'
+            ? residentialLandPlotHasPrice(formData)
+            : formData.propertyType === 'industrial-land'
+              ? industrialLandHasPrice(formData)
+              : commercialLandHasPrice(formData))) ||
+        (isSaleCommercialOfficeLike && commercialOfficeSpaceHasPrice(formData)) ||
+        (isSaleCommercialShop && commercialShopHasPrice(formData)) ||
+        (isSaleIndustrialBuildingLike && industrialBuildingHasPrice(formData));
+      if (!hasPrice) {
+        alert('Please enter price details in the Price Details section');
+        return;
+      }
+    } else if (isRentCategoryListing) {
+      if (!rentListingHasPrice(formData.categoryFields, formData.price)) {
+        alert('Please enter monthly rent in the Rent/ Lease Details section');
+        return;
+      }
+    } else if (
+      (!formData.price || formData.price <= 0) &&
+      (!formData.pricing || formData.pricing.length === 0)
+    ) {
       alert('Please add at least one pricing entry in the Pricing & Floor Plans section');
       return;
     }
-    // Set default price from first pricing entry if price is not set
-    if ((!formData.price || formData.price <= 0) && formData.pricing && formData.pricing.length > 0) {
+    if (
+      !isCategoryListing &&
+      (!formData.price || formData.price <= 0) &&
+      formData.pricing &&
+      formData.pricing.length > 0
+    ) {
       // Extract numeric value from first pricing entry (remove currency symbols)
       const firstPrice = formData.pricing[0].price.replace(/[₹,\s]/g, '');
       const numericPrice = parseFloat(firstPrice) || 0;
@@ -476,8 +777,14 @@ function PropertyFormModal({
       return;
     }
     if (!formData.images || formData.images.length === 0) {
-      alert('Please add at least one image');
-      return;
+      const categorized =
+        isCategoryListing &&
+        Object.values(mergeSaleListingCommon(formData.categoryFields).photoCategories).flat()
+          .length > 0;
+      if (!categorized) {
+        alert('Please add at least one photo');
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -499,11 +806,44 @@ function PropertyFormModal({
         }
       }
 
-      // Prepare data for API
-      const submitData = {
+      // Prepare data for API — merge flat-apartment fields into shared property fields
+      let submitData = {
         ...formData,
         price: finalPrice > 0 ? parseFloat(finalPrice.toString()) : 0,
       };
+
+      if (isSaleFlatApartment) {
+        submitData = buildFlatApartmentSubmitPayload({
+          ...submitData,
+          categoryFields: {
+            ...submitData.categoryFields,
+            projectSocietyName: submitData.name,
+          },
+        });
+      } else if (isSaleHouseLike) {
+        const label = getPropertyTypeLabel(formData.propertyType) || 'Residential House';
+        submitData = buildResidentialHouseSubmitPayload(submitData, label);
+      } else if (isSaleLandPlot) {
+        if (formData.propertyType === 'residential-land-plot') {
+          submitData = buildResidentialLandPlotSubmitPayload(submitData);
+        } else if (formData.propertyType === 'industrial-land') {
+          submitData = buildIndustrialLandSubmitPayload(submitData);
+        } else if (formData.propertyType === 'warehouse-godown') {
+          submitData = buildWarehouseGodownSubmitPayload(submitData);
+        } else {
+          submitData = buildCommercialLandSubmitPayload(submitData);
+        }
+      } else if (isSaleCommercialOfficeLike) {
+        const label = getPropertyTypeLabel(formData.propertyType) || 'Commercial Office Space';
+        submitData = buildCommercialOfficeSpaceSubmitPayload(submitData, label);
+      } else if (isSaleCommercialShop) {
+        submitData = buildCommercialShopSubmitPayload(submitData);
+      } else if (isSaleIndustrialBuildingLike) {
+        const label = getPropertyTypeLabel(formData.propertyType) || 'Industrial Building';
+        submitData = buildIndustrialBuildingLikeSubmitPayload(submitData, label);
+      } else if (isRentCategoryListing) {
+        submitData = buildRentSubmitPayload(submitData);
+      }
 
       const response = await fetch(url, {
         method,
@@ -547,124 +887,220 @@ function PropertyFormModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Property Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+          {/* Unified listing header */}
+          <div className="space-y-6 border-b border-gray-200 pb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Details</h3>
+              <div className="mb-6">
+                <p className="text-sm font-medium text-gray-700 mb-3">For</p>
+                <div className="flex flex-wrap gap-6">
+                  {LISTING_FOR_OPTIONS.map((option) => (
+                    <label key={option.value} className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="listingFor"
+                        value={option.value}
+                        checked={formData.listingFor === option.value}
+                        onChange={(e) => {
+                          const listingFor = e.target.value as ListingFor;
+                          let propertyType = formData.propertyType;
+                          let propertyCategory = formData.propertyCategory;
+                          let categoryFields = formData.categoryFields;
+
+                          if (listingFor === 'rent' && propertyType === 'residential-land-plot') {
+                            propertyType = '';
+                            categoryFields = {};
+                          } else if (listingFor === 'rent' && propertyType) {
+                            categoryFields = getRentCategoryDefaults(propertyType, formData.name);
+                          } else if (listingFor === 'sale' && propertyType) {
+                            categoryFields = getSaleCategoryDefaults(propertyType, formData.name);
+                          }
+
+                          setFormData({
+                            ...formData,
+                            listingFor,
+                            propertyType,
+                            propertyCategory,
+                            categoryFields,
+                          });
+                        }}
+                        className="h-4 w-4 border-gray-300 text-brand-red focus:ring-brand-red"
+                      />
+                      <span className="text-sm text-gray-800">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <SegmentButtonGroup
+                  label="Category"
+                  options={['Residential', 'Commercial']}
+                  value={
+                    formData.propertyCategory === 'residential'
+                      ? 'Residential'
+                      : formData.propertyCategory === 'commercial'
+                        ? 'Commercial'
+                        : ''
+                  }
+                  onChange={(label) => {
+                    const propertyCategory = (label === 'Commercial' ? 'commercial' : 'residential') as PropertyCategory;
+                    setFormData({
+                      ...formData,
+                      propertyCategory,
+                      propertyType: '',
+                      categoryFields: {},
+                    });
+                  }}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City *
-                </label>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
                 <select
-                  required
-                  value={formData.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value, location: '' })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                >
-                  <option value="">Select City</option>
-                  {cities.map((city) => (
-                    <option key={city._id} value={city.name}>
-                      {city.name}
-                    </option>
-                  ))}
-                  {property?.city &&
-                    !cities.some((city) => city.name === property.city) && (
-                      <option value={property.city}>{property.city}</option>
-                    )}
-                </select>
-                {cities.length === 0 && (
-                  <p className="text-xs text-red-600 mt-1">
-                    Please add a city first in the Locations tab
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location *
-                </label>
-                <select
-                  required
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  disabled={!formData.city}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  value={formData.propertyType}
+                  onChange={(e) => handlePropertyTypeChange(e.target.value)}
+                  disabled={!formData.propertyCategory}
+                  className={`${inputClass}${!formData.propertyCategory ? ' opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <option value="">
-                    {formData.city ? 'Select Location' : 'Select city first'}
+                    {formData.propertyCategory ? 'Select Property Type' : 'Select category first'}
                   </option>
-                  {cities
-                    .find((city) => city.name === formData.city)
-                    ?.locations.map((loc) => (
-                      <option key={loc._id} value={loc.name}>
-                        {loc.name}
-                      </option>
-                    ))}
-                  {property?.location &&
-                    formData.city &&
-                    !cities
-                      .find((city) => city.name === formData.city)
-                      ?.locations.some((loc) => loc.name === property.location) && (
-                      <option value={property.location}>{property.location}</option>
-                    )}
-                </select>
-                {formData.city &&
-                  (cities.find((city) => city.name === formData.city)?.locations.length ?? 0) ===
-                    0 && (
-                    <p className="text-xs text-red-600 mt-1">
-                      No locations in this city — add one in the Locations tab
-                    </p>
-                  )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Developer *
-                </label>
-                <select
-                  required
-                  value={formData.developer}
-                  onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                >
-                  <option value="">Select Developer</option>
-                  {developers.map((dev) => (
-                    <option key={dev._id} value={dev.name}>
-                      {dev.name}
+                  {propertyTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
-                {developers.length === 0 && (
-                  <p className="text-xs text-red-600 mt-1">
-                    Please add a developer first in the Developers tab
-                  </p>
-                )}
+              </div>
+
+              {isSaleFlatApartment && flatFields && (
+                <SegmentButtonGroup
+                  label="Total No. of Flats in Your Society"
+                  options={[...SOCIETY_FLATS_OPTIONS]}
+                  value={String(flatFields.societyFlatsCount || '')}
+                  onChange={(value) =>
+                    updateCategoryFields({ ...formData.categoryFields, societyFlatsCount: value })
+                  }
+                />
+              )}
+            </div>
+
+            {/* Single location block — uses existing city, name, location fields */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Location</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                  <select
+                    required
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value, location: '' })
+                    }
+                    className={inputClass}
+                  >
+                    <option value="">Select City</option>
+                    {cities.map((city) => (
+                      <option key={city._id} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                    {property?.city && !cities.some((city) => city.name === property.city) && (
+                      <option value={property.city}>{property.city}</option>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {isSaleFlatApartment ? 'Name of Project/Society *' : 'Property Name *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    placeholder={
+                      isSaleFlatApartment ? 'Name Of Project/Society' : 'Property / Project name'
+                    }
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setFormData({ ...formData, name });
+                      if (isCategoryListing) {
+                        updateCategoryFields({
+                          ...formData.categoryFields,
+                          projectSocietyName: name,
+                        });
+                      }
+                    }}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {isSaleFlatApartment ? 'Locality / Area *' : 'Location *'}
+                  </label>
+                  <select
+                    required
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    disabled={!formData.city}
+                    className={`${inputClass} disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                  >
+                    <option value="">
+                      {formData.city ? 'Select Location' : 'Select city first'}
+                    </option>
+                    {cities
+                      .find((city) => city.name === formData.city)
+                      ?.locations.map((loc) => (
+                        <option key={loc._id} value={loc.name}>
+                          {loc.name}
+                        </option>
+                      ))}
+                    {property?.location &&
+                      formData.city &&
+                      !cities
+                        .find((city) => city.name === formData.city)
+                        ?.locations.some((loc) => loc.name === property.location) && (
+                        <option value={property.location}>{property.location}</option>
+                      )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Developer *</label>
+                  <select
+                    required
+                    value={formData.developer}
+                    onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
+                    className={inputClass}
+                  >
+                    <option value="">Select Developer</option>
+                    {developers.map((dev) => (
+                      <option key={dev._id} value={dev.name}>
+                        {dev.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className={inputClass}
+                />
               </div>
             </div>
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-              />
-            </div>
+
+            <PropertyCategoryFields
+              listingFor={formData.listingFor}
+              propertyType={formData.propertyType}
+              categoryFields={formData.categoryFields}
+              onChange={updateCategoryFields}
+              underlineInputClass={inputClass}
+            />
           </div>
 
           {/* Display Options */}
@@ -768,7 +1204,8 @@ function PropertyFormModal({
             </div>
           </div>
 
-          {/* Overview Section */}
+          {/* Overview Section — project listings; flat sale uses category fields instead */}
+          {!isCategoryListing && (
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Overview Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -916,8 +1353,10 @@ function PropertyFormModal({
               </div>
             </div>
           </div>
+          )}
 
-          {/* Pricing Section */}
+          {/* Pricing Section — project BHK configs; flat sale uses Price Details above */}
+          {!isCategoryListing && (
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Pricing & Floor Plans</h3>
             <p className="text-sm text-gray-500 mb-4">
@@ -1016,6 +1455,7 @@ function PropertyFormModal({
               )}
             </div>
           </div>
+          )}
 
           {/* Amenities & Facilities */}
           <div>
@@ -1120,7 +1560,8 @@ function PropertyFormModal({
             </div>
           </div>
 
-          {/* Specifications Section */}
+          {/* Specifications — not applicable for vacant land/plot listings */}
+          {!isSaleLandPlot && (
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
             <p className="text-sm text-gray-500 mb-4">Select standard Indian market specifications from the dropdowns below.</p>
@@ -1275,70 +1716,70 @@ function PropertyFormModal({
               </div>
             </div>
           </div>
+          )}
 
           {/* Connectivity Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Connectivity</h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <select
-                  value={connectivityInput.category}
-                  onChange={(e) => setConnectivityInput({ ...connectivityInput, category: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                >
-                  <option value="commute">Commute</option>
-                  <option value="entertainment">Entertainment</option>
-                  <option value="essentials">Essentials</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Name (e.g., Bus Station)"
-                  value={connectivityInput.name}
-                  onChange={(e) => setConnectivityInput({ ...connectivityInput, name: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Distance (e.g., 1.7 km)"
-                  value={connectivityInput.distance}
-                  onChange={(e) => setConnectivityInput({ ...connectivityInput, distance: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                />
-                <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-2">
+                <div className="w-full sm:w-auto sm:min-w-[130px]">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
+                  <select
+                    value={connectivityInput.category}
+                    onChange={(e) => setConnectivityInput({ ...connectivityInput, category: e.target.value })}
+                    className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                  >
+                    <option value="commute">Commute</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="essentials">Essentials</option>
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[140px]">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
                   <input
                     type="text"
-                    placeholder="Time (e.g., 7 mins)"
+                    placeholder="Bus Station"
+                    value={connectivityInput.name}
+                    onChange={(e) => setConnectivityInput({ ...connectivityInput, name: e.target.value })}
+                    className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                  />
+                </div>
+                <div className="w-full sm:w-28">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Distance</label>
+                  <input
+                    type="text"
+                    placeholder="1.7 km"
+                    value={connectivityInput.distance}
+                    onChange={(e) => setConnectivityInput({ ...connectivityInput, distance: e.target.value })}
+                    className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                  />
+                </div>
+                <div className="w-full sm:w-24">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+                  <input
+                    type="text"
+                    placeholder="7 mins"
                     value={connectivityInput.time}
                     onChange={(e) => setConnectivityInput({ ...connectivityInput, time: e.target.value })}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (connectivityInput.name && connectivityInput.distance && connectivityInput.time) {
-                        const newItem = {
-                          name: connectivityInput.name,
-                          distance: connectivityInput.distance,
-                          time: connectivityInput.time,
-                        };
-                        setFormData({
-                          ...formData,
-                          connectivity: {
-                            ...formData.connectivity,
-                            [connectivityInput.category]: [
-                              ...(formData.connectivity[connectivityInput.category as keyof typeof formData.connectivity] || []),
-                              newItem,
-                            ],
-                          },
-                        });
-                        setConnectivityInput({ category: 'commute', name: '', distance: '', time: '' });
+                    className="w-full text-sm px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addConnectivityItem();
                       }
                     }}
-                    className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal-dark transition"
-                  >
-                    Add
-                  </button>
+                  />
                 </div>
+                <button
+                  type="button"
+                  aria-label="Add connectivity item"
+                  title="Add"
+                  onClick={addConnectivityItem}
+                  className="shrink-0 self-end sm:mb-0 mb-1 flex h-9 w-9 sm:h-[34px] sm:w-[34px] items-center justify-center rounded-md bg-brand-teal text-white text-lg font-bold hover:bg-brand-teal-dark transition focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2"
+                >
+                  +
+                </button>
               </div>
               {Object.entries(formData.connectivity).map(([category, items]) => (
                 items && items.length > 0 && (
@@ -1395,9 +1836,29 @@ function PropertyFormModal({
 
           {/* Images */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Images *</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Photos *</h3>
+            {isCategoryListing && (
+              <div className="flex flex-wrap gap-1 border-b border-gray-200 mb-4">
+                {PHOTO_TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActivePhotoTab(tab)}
+                    className={`px-3 py-2 text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
+                      activePhotoTab === tab
+                        ? 'border-brand-red text-brand-red font-medium'
+                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
             <p className="text-sm text-gray-600 mb-3">
-              Add multiple images — upload one at a time or pick several files. The first image is the main cover photo.
+              {isCategoryListing
+                ? `Upload photos for "${activePhotoTab}". All photos are saved to the property gallery.`
+                : 'Add multiple images — upload one at a time or pick several files. The first image is the main cover photo.'}
             </p>
             <div className="space-y-2">
               {/* File Upload */}
@@ -1441,10 +1902,14 @@ function PropertyFormModal({
                       }
 
                       if (newUrls.length > 0) {
-                        setFormData({
-                          ...formData,
-                          images: [...formData.images, ...newUrls],
-                        });
+                        if (isCategoryListing) {
+                          newUrls.forEach((url) => addPhotoToCategory(url));
+                        } else {
+                          setFormData({
+                            ...formData,
+                            images: [...formData.images, ...newUrls],
+                          });
+                        }
                       }
                       e.target.value = '';
                     } catch (error: unknown) {
@@ -1477,10 +1942,14 @@ function PropertyFormModal({
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       if (imageInput.trim()) {
-                        setFormData({
-                          ...formData,
-                          images: [...formData.images, imageInput.trim()],
-                        });
+                        if (isCategoryListing) {
+                          addPhotoToCategory(imageInput.trim());
+                        } else {
+                          setFormData({
+                            ...formData,
+                            images: [...formData.images, imageInput.trim()],
+                          });
+                        }
                         setImageInput('');
                       }
                     }
@@ -1490,10 +1959,14 @@ function PropertyFormModal({
                   type="button"
                   onClick={() => {
                     if (imageInput.trim()) {
-                      setFormData({
-                        ...formData,
-                        images: [...formData.images, imageInput.trim()],
-                      });
+                      if (isCategoryListing) {
+                        addPhotoToCategory(imageInput.trim());
+                      } else {
+                        setFormData({
+                          ...formData,
+                          images: [...formData.images, imageInput.trim()],
+                        });
+                      }
                       setImageInput('');
                     }
                   }}

@@ -102,8 +102,24 @@ export default function PropertyListings() {
       if (response.ok) {
         const data = await response.json();
         // Convert database properties to PropertyCard format
-        const formatted = data.map((prop: any) => ({
+        const formatted = data.map((prop: {
+          _id: string;
+          name?: string;
+          title?: string;
+          location: string;
+          price: number;
+          bedrooms?: number;
+          bathrooms?: number;
+          area?: number;
+          images?: string[];
+          subCategory?: string;
+          type?: string;
+          listingFor?: string;
+          propertyType?: string;
+          pricing?: Array<{ price?: string }>;
+        }) => ({
           id: prop._id,
+          _id: prop._id,
           title: prop.name || prop.title || 'Property',
           location: prop.location,
           price: prop.price,
@@ -111,7 +127,11 @@ export default function PropertyListings() {
           bathrooms: prop.bathrooms || 0,
           area: prop.area || 0,
           image: prop.images && prop.images.length > 0 ? prop.images[0] : "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop",
-          type: prop.subCategory || prop.type || 'Property'
+          images: prop.images,
+          type: prop.subCategory || prop.type || 'Property',
+          listingFor: prop.listingFor,
+          propertyType: prop.propertyType,
+          pricing: prop.pricing,
         }));
         setDatabaseProperties(formatted);
       }

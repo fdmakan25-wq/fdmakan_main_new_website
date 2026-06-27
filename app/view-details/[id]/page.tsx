@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';
 import { EXTERNAL_AMENITIES } from '@/lib/constants';
@@ -15,6 +15,13 @@ import {
   getGoogleMapsEmbedUrl,
   getGoogleMapsSearchUrl,
 } from '@/lib/google-maps';
+import {
+  formatPropertyPrice,
+  getListingBadgeLabel,
+  isStructuredListing,
+} from '@/lib/property-details-display';
+import { getPropertyTypeLabel } from '@/lib/property-listing-options';
+import PropertyListingDetails from '@/components/property/PropertyListingDetails';
 import {
   SectionIcon,
   InlineIconBox,
@@ -47,6 +54,10 @@ interface Property {
   developer: string;
   location: string;
   city?: string;
+  listingFor?: string;
+  propertyType?: string;
+  propertyCategory?: string;
+  categoryFields?: Record<string, unknown>;
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
@@ -112,7 +123,7 @@ export default function PropertyDetailsPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['highlights', 'overview', 'about', 'pricing', 'emi', 'amenities', 'connectivity', 'builder', 'faq'];
+      const sections = ['highlights', 'overview', 'details', 'about', 'pricing', 'emi', 'amenities', 'connectivity', 'builder', 'faq'];
       const scrollPosition = window.scrollY + 200; // Offset for header + sticky nav
 
       for (const section of sections) {
@@ -239,11 +250,33 @@ export default function PropertyDetailsPage() {
     ? property.pricing
     : property.price > 0
       ? [{
-          type: 'Standard',
-          carpetArea: '—',
-          price: `₹ ${(property.price / 10000000).toFixed(2)} Cr`,
+          type: getPropertyTypeLabel(property.propertyType || '') || 'Standard',
+          carpetArea: property.area ? `${property.area} sq.ft` : '—',
+          price: formatPropertyPrice(property.price, property.listingFor, property.pricing),
         }]
       : [];
+
+  const isStructured = isStructuredListing(property);
+  const isRentListing = property.listingFor === 'rent';
+
+  type OverviewItem = {
+    label: string;
+    value: string;
+    icon: ReactNode;
+    isLink?: boolean;
+  };
+  const navTabs = [
+    'Highlights',
+    'Overview',
+    ...(isStructured ? ['Details'] : []),
+    'About',
+    isRentListing ? 'Rent' : 'Pricing',
+    ...(isRentListing ? [] : ['EMI']),
+    'Amenities',
+    'Connectivity',
+    'Builder',
+    'FAQ',
+  ];
 
   const pricingFilterOptions = ['all', ...Array.from(new Set(pricingList.map((p) => p.type).filter(Boolean)))];
 
@@ -252,8 +285,12 @@ export default function PropertyDetailsPage() {
     : pricingList.filter((p) => p.type === pricingFilter);
 
   const pricingSummaryText = pricingList.length > 0
-    ? `Pricing starts from ${pricingList[0].price} for ${pricingList.map((p) => p.type).join(', ')}.`
-    : `Contact us for pricing details on ${property.name}.`;
+    ? isRentListing
+      ? `Monthly rent starts from ${pricingList[0].price}.`
+      : `Pricing starts from ${pricingList[0].price} for ${pricingList.map((p) => p.type).join(', ')}.`
+    : isRentListing
+      ? `Contact us for rent details on ${property.name}.`
+      : `Contact us for pricing details on ${property.name}.`;
 
   const hasImages = property.images && property.images.length > 0;
   const hasVideos = property.videos && property.videos.length > 0;
@@ -448,9 +485,23 @@ export default function PropertyDetailsPage() {
             <div className="sticky top-16 z-40 -mx-4 px-4 md:mx-0 md:px-0">
               <div className="bg-white/90 backdrop-blur-md shadow-lg shadow-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
                 <div className="flex items-center justify-between gap-4 px-4 py-3 md:px-5 border-b border-gray-100">
-                  <h1 className="text-base md:text-xl font-bold text-gray-900 leading-tight truncate min-w-0">
-                    {property.name}
-                  </h1>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      {property.listingFor && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wide bg-brand-red/10 text-brand-red border border-brand-red/20">
+                          {getListingBadgeLabel(property.listingFor)}
+                        </span>
+                      )}
+                      {property.propertyType && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wide bg-brand-teal/10 text-brand-teal border border-brand-teal/20">
+                          {getPropertyTypeLabel(property.propertyType)}
+                        </span>
+                      )}
+                    </div>
+                    <h1 className="text-base md:text-xl font-bold text-gray-900 leading-tight truncate">
+                      {property.name}
+                    </h1>
+                  </div>
                   {(property.location || property.city) && (
                     <p className="text-xs md:text-sm text-gray-500 font-normal flex items-center gap-1.5 flex-shrink-0 text-right">
                       <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -465,7 +516,7 @@ export default function PropertyDetailsPage() {
                 </div>
                 <div className="overflow-x-auto scrollbar-hide py-3 px-2 md:px-3">
                   <div className="flex whitespace-nowrap min-w-full gap-2 px-1">
-                    {['Highlights', 'Overview', 'About', 'Pricing', 'EMI', 'Amenities', 'Connectivity', 'Builder', 'FAQ'].map((item) => {
+                    {navTabs.map((item) => {
                       const id = item.toLowerCase();
                       const isActive = activeTab === id;
                       return (
@@ -531,14 +582,24 @@ export default function PropertyDetailsPage() {
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Overview of {property.name}</h2>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  { label: 'Storeys', value: property.storeys || 'G + 39', icon: <IconStoreys /> },
-                  { label: 'Project Area', value: property.projectArea || '5.5 Acres', icon: <IconProjectArea /> },
-                  { label: 'Possession Status', value: property.possessionStatus || (property.available ? 'Ready to Move' : 'Under Construction'), icon: <IconPossession /> },
-                  { label: 'Advertiser RERA', value: property.advertiserReraNumber || 'A52000000045', icon: <IconCertificate /> },
-                  { label: 'Possession Date', value: property.possessionDate || '12-2028', icon: <IconCalendar /> },
-                  { label: 'Project RERA', value: property.projectReraNumber || 'P51900046369', isLink: true, icon: <IconShield /> },
-                ].map((item, idx) => (
+                {(isStructured
+                  ? ([
+                      property.bedrooms ? { label: 'Bedrooms', value: String(property.bedrooms), icon: <IconBuilding /> } : null,
+                      property.bathrooms ? { label: 'Bathrooms', value: String(property.bathrooms), icon: <IconBuilding /> } : null,
+                      property.area ? { label: 'Area', value: `${property.area} sq.ft`, icon: <IconProjectArea /> } : null,
+                      property.possessionStatus ? { label: 'Possession Status', value: property.possessionStatus, icon: <IconPossession /> } : null,
+                      property.possessionDate ? { label: 'Possession Date', value: property.possessionDate, icon: <IconCalendar /> } : null,
+                      property.listingFor ? { label: 'Listing For', value: getListingBadgeLabel(property.listingFor), icon: <IconKey /> } : null,
+                    ].filter(Boolean) as OverviewItem[])
+                  : [
+                      { label: 'Storeys', value: property.storeys || 'G + 39', icon: <IconStoreys /> },
+                      { label: 'Project Area', value: property.projectArea || '5.5 Acres', icon: <IconProjectArea /> },
+                      { label: 'Possession Status', value: property.possessionStatus || (property.available ? 'Ready to Move' : 'Under Construction'), icon: <IconPossession /> },
+                      { label: 'Advertiser RERA', value: property.advertiserReraNumber || 'A52000000045', icon: <IconCertificate /> },
+                      { label: 'Possession Date', value: property.possessionDate || '12-2028', icon: <IconCalendar /> },
+                      { label: 'Project RERA', value: property.projectReraNumber || 'P51900046369', isLink: true, icon: <IconShield /> },
+                    ]
+                ).map((item, idx) => (
                   <div key={idx} className="group p-5 rounded-2xl bg-gray-50 border border-transparent hover:border-brand-red/30 hover:bg-white transition-all shadow-sm hover:shadow-md">
                     <div className="flex items-center gap-4">
                       <InlineIconBox color="red">
@@ -553,6 +614,20 @@ export default function PropertyDetailsPage() {
                 ))}
               </div>
             </section>
+
+            {isStructured && (
+              <PropertyListingDetails
+                listingFor={property.listingFor}
+                propertyType={property.propertyType}
+                propertyCategory={property.propertyCategory}
+                categoryFields={property.categoryFields}
+                bedrooms={property.bedrooms}
+                bathrooms={property.bathrooms}
+                area={property.area}
+                possessionStatus={property.possessionStatus}
+                possessionDate={property.possessionDate}
+              />
+            )}
 
             {/* About Project */}
             <section id="about" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
@@ -577,7 +652,7 @@ export default function PropertyDetailsPage() {
                   </button>
                 </div>
 
-                {property.reraQrCode && (
+                {property.reraQrCode && !isStructured && (
                   <div className="mt-10 pt-10 border-t border-gray-100">
                     <div className="flex flex-col md:flex-row items-center gap-8 p-6 rounded-2xl bg-gray-50/50 border border-gray-100">
                       <div className="w-40 h-40 bg-white p-3 rounded-2xl shadow-sm border border-gray-200 flex-shrink-0 animate-in zoom-in duration-500">
@@ -607,7 +682,9 @@ export default function PropertyDetailsPage() {
             <section id="pricing" className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-48">
               <div className="flex items-center gap-3 mb-8">
                 <SectionIcon color="teal"><IconBanknotes /></SectionIcon>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Pricing</h2>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  {isRentListing ? 'Rent Details' : 'Pricing'}
+                </h2>
               </div>
 
               {pricingFilterOptions.length > 1 && (
@@ -633,8 +710,12 @@ export default function PropertyDetailsPage() {
                     <tr className="bg-gray-50/80 border-b border-gray-100">
                       <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Type</th>
                       <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Carpet Area</th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Price</th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        {isRentListing ? 'Monthly Rent' : 'Price'}
+                      </th>
+                      {!isStructured && (
+                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -649,14 +730,16 @@ export default function PropertyDetailsPage() {
                         <td className="px-6 py-5">
                           <span className="text-lg font-black text-navy-blue">{item.price}</span>
                         </td>
-                        <td className="px-6 py-5 text-right">
-                          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-bold text-brand-teal hover:bg-brand-teal hover:text-white hover:border-transparent transition-all shadow-sm">
-                            <span>Price Breakup</span>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        </td>
+                        {!isStructured && (
+                          <td className="px-6 py-5 text-right">
+                            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-bold text-brand-teal hover:bg-brand-teal hover:text-white hover:border-transparent transition-all shadow-sm">
+                              <span>Price Breakup</span>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -665,9 +748,11 @@ export default function PropertyDetailsPage() {
             </section>
 
             {/* EMI Calculator Section */}
-            <section id="emi" className="scroll-mt-48">
-              <EmiCalculator defaultLoanAmount={property.price} />
-            </section>
+            {!isRentListing && (
+              <section id="emi" className="scroll-mt-48">
+                <EmiCalculator defaultLoanAmount={property.price} />
+              </section>
+            )}
 
             {/* Amenities Section */}
             <section id="amenities" className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm scroll-mt-48">
