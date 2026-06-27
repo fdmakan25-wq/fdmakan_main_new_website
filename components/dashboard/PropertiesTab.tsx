@@ -1027,7 +1027,16 @@ function PropertyFormModal({
                   ))}
                 </select>
               </div>
+            </div>
 
+            {!formData.propertyType && (
+              <p className="text-sm text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-4 py-3">
+                Select a property type above to continue with location, pricing, photos, and other details.
+              </p>
+            )}
+
+            {formData.propertyType && (
+              <>
               {isSaleFlatApartment && flatFields && (
                 <SegmentButtonGroup
                   label="Total No. of Flats in Your Society"
@@ -1038,7 +1047,6 @@ function PropertyFormModal({
                   }
                 />
               )}
-            </div>
 
             {/* Single location block — uses existing city, name, location fields */}
             <div>
@@ -1155,7 +1163,12 @@ function PropertyFormModal({
               onChange={updateCategoryFields}
               underlineInputClass={inputClass}
             />
+              </>
+            )}
           </div>
+
+          {formData.propertyType && (
+          <>
 
           {/* Display Options */}
           <div>
@@ -2196,6 +2209,9 @@ function PropertyFormModal({
           </div>
 
           {/* Form Actions */}
+          </>
+          )}
+
           <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
             <button
               type="button"
@@ -2204,13 +2220,15 @@ function PropertyFormModal({
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-6 py-2 bg-brand-red text-white rounded-lg font-semibold hover:bg-brand-red-dark transition disabled:opacity-50"
-            >
-              {submitting ? 'Saving...' : property ? 'Update Property' : 'Add Property'}
-            </button>
+            {formData.propertyType && (
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-2 bg-brand-red text-white rounded-lg font-semibold hover:bg-brand-red-dark transition disabled:opacity-50"
+              >
+                {submitting ? 'Saving...' : property ? 'Update Property' : 'Add Property'}
+              </button>
+            )}
           </div>
         </form>
       </div >
