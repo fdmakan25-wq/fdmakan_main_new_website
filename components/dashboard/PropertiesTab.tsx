@@ -85,30 +85,34 @@ const SALE_COMMERCIAL_LAND_LIKE_TYPES = new Set(['commercial-land', 'warehouse-g
 
 const SALE_INDUSTRIAL_BUILDING_LIKE_TYPES = new Set(['industrial-building', 'industrial-shed']);
 
+function asCategoryFields(value: object): Record<string, unknown> {
+  return value as Record<string, unknown>;
+}
+
 function getSaleCategoryDefaults(propertyType: string, propertyName: string): Record<string, unknown> {
   if (propertyType === 'flat-apartment') {
     return { ...getFlatApartmentSaleDefaults(), projectSocietyName: propertyName };
   }
   if (SALE_HOUSE_LIKE_TYPES.has(propertyType)) {
-    return getResidentialHouseSaleDefaults();
+    return asCategoryFields(getResidentialHouseSaleDefaults());
   }
   if (propertyType === 'residential-land-plot') {
-    return getResidentialLandPlotSaleDefaults();
+    return asCategoryFields(getResidentialLandPlotSaleDefaults());
   }
   if (propertyType === 'commercial-office-space' || propertyType === 'office-it-park-sez') {
-    return getCommercialOfficeSpaceSaleDefaults();
+    return asCategoryFields(getCommercialOfficeSpaceSaleDefaults());
   }
   if (propertyType === 'commercial-shop') {
-    return getCommercialShopSaleDefaults();
+    return asCategoryFields(getCommercialShopSaleDefaults());
   }
   if (SALE_COMMERCIAL_LAND_LIKE_TYPES.has(propertyType)) {
-    return getCommercialLandSaleDefaults();
+    return asCategoryFields(getCommercialLandSaleDefaults());
   }
   if (propertyType === 'industrial-land') {
-    return getIndustrialLandSaleDefaults();
+    return asCategoryFields(getIndustrialLandSaleDefaults());
   }
   if (SALE_INDUSTRIAL_BUILDING_LIKE_TYPES.has(propertyType)) {
-    return getIndustrialBuildingSaleDefaults();
+    return asCategoryFields(getIndustrialBuildingSaleDefaults());
   }
   return {};
 }
@@ -807,7 +811,7 @@ function PropertyFormModal({
       }
 
       // Prepare data for API — merge flat-apartment fields into shared property fields
-      let submitData = {
+      let submitData: Record<string, unknown> = {
         ...formData,
         price: finalPrice > 0 ? parseFloat(finalPrice.toString()) : 0,
       };
@@ -816,33 +820,83 @@ function PropertyFormModal({
         submitData = buildFlatApartmentSubmitPayload({
           ...submitData,
           categoryFields: {
-            ...submitData.categoryFields,
-            projectSocietyName: submitData.name,
+            ...(submitData.categoryFields as Record<string, unknown>),
+            projectSocietyName: submitData.name as string,
           },
-        });
+          images: submitData.images as string[],
+          pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+          price: submitData.price as number,
+        }) as Record<string, unknown>;
       } else if (isSaleHouseLike) {
         const label = getPropertyTypeLabel(formData.propertyType) || 'Residential House';
-        submitData = buildResidentialHouseSubmitPayload(submitData, label);
+        submitData = buildResidentialHouseSubmitPayload(
+          {
+            ...submitData,
+            images: submitData.images as string[],
+            pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+            price: submitData.price as number,
+            categoryFields: submitData.categoryFields as Record<string, unknown>,
+          },
+          label
+        ) as Record<string, unknown>;
       } else if (isSaleLandPlot) {
+        const landPlotPayload = {
+          ...submitData,
+          images: submitData.images as string[],
+          pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+          price: submitData.price as number,
+          categoryFields: submitData.categoryFields as Record<string, unknown>,
+        };
         if (formData.propertyType === 'residential-land-plot') {
-          submitData = buildResidentialLandPlotSubmitPayload(submitData);
+          submitData = buildResidentialLandPlotSubmitPayload(landPlotPayload) as Record<string, unknown>;
         } else if (formData.propertyType === 'industrial-land') {
-          submitData = buildIndustrialLandSubmitPayload(submitData);
+          submitData = buildIndustrialLandSubmitPayload(landPlotPayload) as Record<string, unknown>;
         } else if (formData.propertyType === 'warehouse-godown') {
-          submitData = buildWarehouseGodownSubmitPayload(submitData);
+          submitData = buildWarehouseGodownSubmitPayload(landPlotPayload) as Record<string, unknown>;
         } else {
-          submitData = buildCommercialLandSubmitPayload(submitData);
+          submitData = buildCommercialLandSubmitPayload(landPlotPayload) as Record<string, unknown>;
         }
       } else if (isSaleCommercialOfficeLike) {
         const label = getPropertyTypeLabel(formData.propertyType) || 'Commercial Office Space';
-        submitData = buildCommercialOfficeSpaceSubmitPayload(submitData, label);
+        submitData = buildCommercialOfficeSpaceSubmitPayload(
+          {
+            ...submitData,
+            images: submitData.images as string[],
+            pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+            price: submitData.price as number,
+            categoryFields: submitData.categoryFields as Record<string, unknown>,
+          },
+          label
+        ) as Record<string, unknown>;
       } else if (isSaleCommercialShop) {
-        submitData = buildCommercialShopSubmitPayload(submitData);
+        submitData = buildCommercialShopSubmitPayload({
+          ...submitData,
+          images: submitData.images as string[],
+          pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+          price: submitData.price as number,
+          categoryFields: submitData.categoryFields as Record<string, unknown>,
+        }) as Record<string, unknown>;
       } else if (isSaleIndustrialBuildingLike) {
         const label = getPropertyTypeLabel(formData.propertyType) || 'Industrial Building';
-        submitData = buildIndustrialBuildingLikeSubmitPayload(submitData, label);
+        submitData = buildIndustrialBuildingLikeSubmitPayload(
+          {
+            ...submitData,
+            images: submitData.images as string[],
+            pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+            price: submitData.price as number,
+            categoryFields: submitData.categoryFields as Record<string, unknown>,
+          },
+          label
+        ) as Record<string, unknown>;
       } else if (isRentCategoryListing) {
-        submitData = buildRentSubmitPayload(submitData);
+        submitData = buildRentSubmitPayload({
+          ...submitData,
+          images: submitData.images as string[],
+          pricing: submitData.pricing as Array<{ type: string; carpetArea: string; price: string }>,
+          price: submitData.price as number,
+          categoryFields: submitData.categoryFields as Record<string, unknown>,
+          propertyType: submitData.propertyType as string | undefined,
+        }) as Record<string, unknown>;
       }
 
       const response = await fetch(url, {
