@@ -679,7 +679,7 @@ function PropertyFormModal({
   );
 
   const updateCategoryFields = (categoryFields: Record<string, unknown>) => {
-    setFormData({ ...formData, categoryFields });
+    setFormData((prev) => ({ ...prev, categoryFields }));
   };
 
   const flatFields = isSaleFlatApartment
@@ -1086,13 +1086,18 @@ function PropertyFormModal({
                     }
                     onChange={(e) => {
                       const name = e.target.value;
-                      setFormData({ ...formData, name });
-                      if (isCategoryListing) {
-                        updateCategoryFields({
-                          ...formData.categoryFields,
-                          projectSocietyName: name,
-                        });
-                      }
+                      setFormData((prev) => ({
+                        ...prev,
+                        name,
+                        ...(isCategoryListing
+                          ? {
+                              categoryFields: {
+                                ...prev.categoryFields,
+                                projectSocietyName: name,
+                              },
+                            }
+                          : {}),
+                      }));
                     }}
                     className={inputClass}
                   />
