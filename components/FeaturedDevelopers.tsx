@@ -5,67 +5,45 @@ import { useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';
 
 interface Developer {
-  _id?: string;
-  id?: string | number;
+  _id: string;
+  id: string;
   name: string;
   logoUrl?: string;
-  isDatabase?: boolean;
 }
-
-const demoDevelopers: Developer[] = [
-  { id: 1, name: 'Regency Group' },
-  { id: 2, name: 'Risland' },
-  { id: 3, name: 'Runwal' },
-  { id: 4, name: 'Ruparel Realty' },
-  { id: 5, name: 'Rustomjee' },
-  { id: 6, name: 'Sheth' },
-  { id: 7, name: 'Developer 7' },
-];
 
 export default function FeaturedDevelopers() {
   const router = useRouter();
-  const [databaseDevelopers, setDatabaseDevelopers] = useState<Developer[]>([]);
+  const [developers, setDevelopers] = useState<Developer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDevelopers();
-  }, []);
-
-  const fetchDevelopers = async () => {
-    try {
-      const response = await fetch('/api/developers');
-      if (response.ok) {
+    const fetchDevelopers = async () => {
+      try {
+        const response = await fetch('/api/developers');
+        if (!response.ok) return;
         const data = await response.json();
-        const formatted: Developer[] = data.map((dev: any) => ({
+        const formatted: Developer[] = data.map((dev: { _id: string; name: string; logo?: string }) => ({
           id: dev._id,
           _id: dev._id,
           name: dev.name,
           logoUrl: dev.logo || undefined,
-          isDatabase: true,
         }));
-        setDatabaseDevelopers(formatted);
+        setDevelopers(formatted);
+      } catch (error) {
+        console.error('Error fetching developers:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching developers:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const baseDevelopers = [
-    ...databaseDevelopers,
-    ...demoDevelopers.slice(databaseDevelopers.length).map((dev) => ({ ...dev, isDatabase: false })),
-  ];
+    fetchDevelopers();
+  }, []);
 
-  const developers = [...baseDevelopers, ...baseDevelopers];
+  if (!loading && developers.length === 0) {
+    return null;
+  }
 
-  const handleDeveloperClick = (developer: Developer) => {
-    if (developer.isDatabase && developer._id) {
-      router.push(`/developers/${developer._id}`);
-    } else {
-      alert(`Developer: ${developer.name}\nThis is a demo developer. Add it to the database to view details.`);
-    }
-  };
+  const marqueeDevelopers = [...developers, ...developers];
 
   return (
     <section className="py-14 bg-gray-50">
@@ -74,7 +52,7 @@ export default function FeaturedDevelopers() {
           <h2 className="text-4xl md:text-5xl font-bold flex items-center">
             <span className="text-gray-400 relative inline-block">
               Featured
-              <span className="absolute bottom-0 left-0 w-full h-1 bg-orange-500"></span>
+              <span className="absolute bottom-0 left-0 w-full h-1 bg-orange-500" />
             </span>
             <span className="text-gray-900 ml-4">Developers</span>
           </h2>
@@ -85,7 +63,7 @@ export default function FeaturedDevelopers() {
             <div className="text-center text-gray-400 py-8">Loading developers...</div>
           ) : (
             <div className="flex animate-scroll-left">
-              {developers.map((developer, index) => (
+              {marqueeDevelopers.map((developer, index) => (
                 <div
                   key={`${developer.id}-${index}`}
                   className="flex-shrink-0 px-3"
@@ -93,7 +71,7 @@ export default function FeaturedDevelopers() {
                 >
                   <button
                     type="button"
-                    onClick={() => handleDeveloperClick(developer)}
+                    onClick={() => router.push(`/developers/${developer._id}`)}
                     className="w-full h-36 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer block bg-gray-100"
                     aria-label={developer.name}
                   >

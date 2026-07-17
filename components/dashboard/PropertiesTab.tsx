@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { EXTERNAL_AMENITIES } from '@/lib/constants';
+import { useState, useEffect, useMemo } from 'react';
 import {
   STRUCTURE_QUALITY_OPTIONS,
   LIVING_DINING_FLOORING_OPTIONS,
@@ -19,6 +18,7 @@ import {
   type ListingFor,
   type PropertyCategory,
 } from '@/lib/property-listing-options';
+import { mergeAmenityOptions } from '@/lib/constants';
 import {
   getFlatApartmentSaleDefaults,
   SOCIETY_FLATS_OPTIONS,
@@ -248,10 +248,17 @@ interface CityWithLocations {
   locations: LocationItem[];
 }
 
+interface AmenityOption {
+  _id: string;
+  name: string;
+  icon: string;
+}
+
 export default function PropertiesTab() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [cities, setCities] = useState<CityWithLocations[]>([]);
+  const [amenities, setAmenities] = useState<AmenityOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -260,6 +267,7 @@ export default function PropertiesTab() {
     fetchProperties();
     fetchDevelopers();
     fetchLocations();
+    fetchAmenities();
   }, []);
 
   const fetchLocations = async () => {
@@ -271,6 +279,18 @@ export default function PropertiesTab() {
       }
     } catch (error) {
       console.error('Error fetching cities:', error);
+    }
+  };
+
+  const fetchAmenities = async () => {
+    try {
+      const response = await fetch('/api/amenities', { cache: 'no-store' });
+      if (response.ok) {
+        const data = await response.json();
+        setAmenities(data);
+      }
+    } catch (error) {
+      console.error('Error fetching amenities:', error);
     }
   };
 
@@ -472,6 +492,7 @@ export default function PropertiesTab() {
           property={editingProperty}
           developers={developers}
           cities={cities}
+          amenities={amenities}
           onClose={() => {
             setShowModal(false);
             setEditingProperty(null);
@@ -492,12 +513,14 @@ function PropertyFormModal({
   property,
   developers,
   cities,
+  amenities,
   onClose,
   onSuccess,
 }: {
   property: Property | null;
   developers: Developer[];
   cities: CityWithLocations[];
+  amenities: AmenityOption[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -556,6 +579,7 @@ function PropertyFormModal({
 
   // State for managing dynamic inputs
   const [highlightInput, setHighlightInput] = useState('');
+  const amenityOptions = useMemo(() => mergeAmenityOptions(amenities), [amenities]);
   // const [amenityInput, setAmenityInput] = useState(''); // Removed in favor of checkboxes
   const [facilityInput, setFacilityInput] = useState('');
   const [pricingInput, setPricingInput] = useState({
@@ -1548,8 +1572,8 @@ function PropertyFormModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
                 <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto bg-white">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {EXTERNAL_AMENITIES.map((amenity) => (
-                      <label key={amenity.name} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    {amenityOptions.map((amenity) => (
+                      <label key={amenity.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                         <input
                           type="checkbox"
                           checked={formData.amenities.includes(amenity.name)}
@@ -1568,7 +1592,9 @@ function PropertyFormModal({
                           }}
                           className="w-4 h-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
                         />
-                        <span className="text-sm text-gray-700">{amenity.icon} {amenity.name}</span>
+                        <span className="text-sm text-gray-700">
+                          {amenity.icon ? `${amenity.icon} ` : ''}{amenity.name}
+                        </span>
                       </label>
                     ))}
                   </div>

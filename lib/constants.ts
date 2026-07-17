@@ -27,3 +27,40 @@ export const EXTERNAL_AMENITIES = [
     { name: 'Mini Theatre', icon: '🎬' },
     { name: 'Multi purpose hall', icon: '🏢' },
 ];
+
+export interface AmenityOption {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+const defaultAmenityNames = new Set(
+  EXTERNAL_AMENITIES.map((item) => item.name.trim().toLowerCase())
+);
+
+export function isDefaultAmenityName(name: string): boolean {
+  return defaultAmenityNames.has(name.trim().toLowerCase());
+}
+
+/** Default amenities plus any custom ones added in the dashboard (no duplicates). */
+export function mergeAmenityOptions(
+  customAmenities: Array<{ _id?: string; name: string; icon?: string }>
+): AmenityOption[] {
+  const merged: AmenityOption[] = EXTERNAL_AMENITIES.map((item) => ({
+    id: `default-${item.name}`,
+    name: item.name,
+    icon: item.icon,
+  }));
+
+  for (const item of customAmenities) {
+    const name = item.name?.trim();
+    if (!name || isDefaultAmenityName(name)) continue;
+    merged.push({
+      id: item._id || `custom-${name}`,
+      name,
+      icon: item.icon?.trim() || '',
+    });
+  }
+
+  return merged;
+}

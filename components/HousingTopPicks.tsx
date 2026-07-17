@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
+import { formatPropertyPrice } from '@/lib/property-details-display';
 
 interface TopPickProject {
   id: string;
@@ -15,65 +16,10 @@ interface TopPickProject {
   image: string;
 }
 
-const demoProjects: TopPickProject[] = [
-  {
-    id: 'demo-1',
-    developerName: 'Ishtika Homes',
-    projectName: 'Ishtika Anahata',
-    location: 'Samethanahalli, Bangalore East',
-    price: '₹86.65 L – 1.18 Cr',
-    apartmentTypes: '2, 2.5, 3 BHK',
-    specialOffer: 'No EMI Till Possession',
-    image: 'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&h=500&fit=crop',
-  },
-  {
-    id: 'demo-2',
-    developerName: 'RRL Builders',
-    projectName: 'RRL Palm Altezze',
-    location: 'Bangalore East',
-    price: '₹1.01 Cr – 1.3 Cr',
-    apartmentTypes: '2, 3 BHK',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=500&fit=crop',
-  },
-  {
-    id: 'demo-3',
-    developerName: 'Prestige Group',
-    projectName: 'Prestige Park Ridge',
-    location: 'Whitefield, Bangalore',
-    price: '₹2.5 Cr – 4.5 Cr',
-    apartmentTypes: '3, 4 BHK',
-    specialOffer: 'Early Bird Offer',
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=500&fit=crop',
-  },
-  {
-    id: 'demo-4',
-    developerName: 'Lodha Group',
-    projectName: 'Lodha Upper Thane',
-    location: 'Thane, Maharashtra',
-    price: '₹2.5 Cr – 4.8 Cr',
-    apartmentTypes: '2, 3, 4 BHK',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=500&fit=crop',
-  },
-];
-
-function formatPrice(price: number, pricing?: Array<{ price: string }>) {
-  if (pricing && pricing.length > 0) {
-    const prices = pricing.map((p) => p.price).filter(Boolean);
-    if (prices.length === 1) return prices[0].startsWith('₹') ? prices[0] : `₹ ${prices[0]}`;
-    if (prices.length > 1) {
-      const first = prices[0].startsWith('₹') ? prices[0] : `₹ ${prices[0]}`;
-      const last = prices[prices.length - 1].startsWith('₹') ? prices[prices.length - 1] : `₹ ${prices[prices.length - 1]}`;
-      return `${first} – ${last}`;
-    }
-  }
-  if (price >= 10000000) return `₹ ${(price / 10000000).toFixed(2)} Cr`;
-  if (price >= 100000) return `₹ ${(price / 100000).toFixed(2)} L`;
-  return `₹ ${price.toLocaleString('en-IN')}`;
-}
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop';
 
 function TopPickCard({ project }: { project: TopPickProject }) {
-  const isDemo = project.id.startsWith('demo-');
-
   return (
     <article className="w-[320px] md:w-[360px] flex-shrink-0 mx-3 bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden group hover:shadow-soft-lg hover:border-brand-teal/20 transition-all duration-300">
       <div className="relative h-44 overflow-hidden">
@@ -112,25 +58,19 @@ function TopPickCard({ project }: { project: TopPickProject }) {
           </span>
         </div>
 
-        {isDemo ? (
-          <button className="w-full py-2.5 bg-navy-blue text-white text-sm font-bold rounded-xl hover:bg-brand-teal transition-colors">
-            Contact
-          </button>
-        ) : (
-          <Link
-            href={`/view-details/${project.id}`}
-            className="block w-full py-2.5 bg-navy-blue text-white text-sm font-bold rounded-xl hover:bg-brand-teal transition-colors text-center"
-          >
-            View Details
-          </Link>
-        )}
+        <Link
+          href={`/view-details/${project.id}`}
+          className="block w-full py-2.5 bg-navy-blue text-white text-sm font-bold rounded-xl hover:bg-brand-teal transition-colors text-center"
+        >
+          View Details
+        </Link>
       </div>
     </article>
   );
 }
 
 export default function HousingTopPicks() {
-  const [projects, setProjects] = useState<TopPickProject[]>(demoProjects);
+  const [projects, setProjects] = useState<TopPickProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -140,25 +80,38 @@ export default function HousingTopPicks() {
         if (!response.ok) return;
         const data = await response.json();
 
-        const flagged = data.filter((p: any) => p.showInTopSelling || p.showInPremium);
+        const flagged = data.filter(
+          (p: { showInTopSelling?: boolean; showInPremium?: boolean }) =>
+            p.showInTopSelling || p.showInPremium
+        );
         const source = flagged.length > 0 ? flagged : data;
 
-        if (source.length === 0) return;
+        const formatted: TopPickProject[] = source.map(
+          (prop: {
+            _id: string;
+            developer?: string;
+            name: string;
+            location: string;
+            price: number;
+            listingFor?: string;
+            pricing?: Array<{ type?: string; price?: string }>;
+            showInPremium?: boolean;
+            images?: string[];
+          }) => ({
+            id: prop._id,
+            developerName: prop.developer || 'Developer',
+            projectName: prop.name,
+            location: prop.location,
+            price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
+            apartmentTypes: prop.pricing?.length
+              ? prop.pricing.map((p) => p.type).filter(Boolean).join(', ')
+              : 'Premium Homes',
+            specialOffer: prop.showInPremium ? 'Premium Pick' : undefined,
+            image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+          })
+        );
 
-        const formatted: TopPickProject[] = source.map((prop: any) => ({
-          id: prop._id,
-          developerName: prop.developer || 'Developer',
-          projectName: prop.name,
-          location: prop.location,
-          price: formatPrice(prop.price, prop.pricing),
-          apartmentTypes: prop.pricing?.length
-            ? prop.pricing.map((p: { type: string }) => p.type).join(', ')
-            : 'Premium Homes',
-          specialOffer: prop.showInPremium ? 'Premium Pick' : undefined,
-          image: prop.images?.[0] || demoProjects[0].image,
-        }));
-
-        setProjects(formatted.length >= 3 ? formatted : [...formatted, ...demoProjects].slice(0, 6));
+        setProjects(formatted);
       } catch (error) {
         console.error('Error fetching top picks:', error);
       } finally {
@@ -168,6 +121,10 @@ export default function HousingTopPicks() {
 
     fetchProjects();
   }, []);
+
+  if (!loading && projects.length === 0) {
+    return null;
+  }
 
   const loopedProjects = [...projects, ...projects];
 

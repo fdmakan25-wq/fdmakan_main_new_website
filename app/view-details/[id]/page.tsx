@@ -3,7 +3,6 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';
-import { EXTERNAL_AMENITIES } from '@/lib/constants';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PropertyStatsSidebar from '@/components/PropertyStatsSidebar';
@@ -766,13 +765,13 @@ export default function PropertyDetailsPage() {
                 <h3 className="text-lg font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100 italic">External Amenities</h3>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-4">
-                  {EXTERNAL_AMENITIES.filter(amenity => property.amenities?.includes(amenity.name)).map((amenity, index) => (
+                  {property.amenities?.map((amenityName, index) => (
                     <div key={index} className="flex items-center gap-3 group transition-all duration-300 hover:translate-x-1">
                       <InlineIconBox color="navy">
-                        {getAmenityIcon(amenity.name)}
+                        {getAmenityIcon(amenityName)}
                       </InlineIconBox>
                       <span className="text-sm font-medium text-gray-600 group-hover:text-navy-blue transition-colors">
-                        {amenity.name}
+                        {amenityName}
                       </span>
                     </div>
                   ))}

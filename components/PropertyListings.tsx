@@ -16,137 +16,67 @@ interface Property {
   images?: string[];
   type?: string;
   subCategory?: string;
+  listingFor?: string;
+  propertyType?: string;
+  pricing?: Array<{ price?: string }>;
 }
 
-// Demo properties (fallback)
-const demoProperties = [
-  {
-    id: 1,
-    title: "Modern Family Home",
-    location: "Downtown, City",
-    price: 450000,
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 2500,
-    image: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop",
-    type: "House"
-  },
-  {
-    id: 2,
-    title: "Luxury Apartment",
-    location: "Riverside District",
-    price: 320000,
-    bedrooms: 2,
-    bathrooms: 2,
-    area: 1200,
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
-    type: "Apartment"
-  },
-  {
-    id: 3,
-    title: "Cozy Studio",
-    location: "City Center",
-    price: 180000,
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 600,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
-    type: "Studio"
-  },
-  {
-    id: 4,
-    title: "Spacious Villa",
-    location: "Suburban Area",
-    price: 680000,
-    bedrooms: 5,
-    bathrooms: 4,
-    area: 3500,
-    image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&h=600&fit=crop",
-    type: "Villa"
-  },
-  {
-    id: 5,
-    title: "Downtown Loft",
-    location: "Business District",
-    price: 280000,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 900,
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&h=600&fit=crop",
-    type: "Loft"
-  },
-  {
-    id: 6,
-    title: "Beachfront Condo",
-    location: "Coastal Area",
-    price: 550000,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 1800,
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
-    type: "Condo"
-  },
-];
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop';
 
 export default function PropertyListings() {
-  const [databaseProperties, setDatabaseProperties] = useState<Property[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const response = await fetch('/api/properties');
+        if (!response.ok) return;
+        const data = await response.json();
+        const formatted = data.map(
+          (prop: {
+            _id: string;
+            name?: string;
+            title?: string;
+            location: string;
+            price: number;
+            bedrooms?: number;
+            bathrooms?: number;
+            area?: number;
+            images?: string[];
+            subCategory?: string;
+            type?: string;
+            listingFor?: string;
+            propertyType?: string;
+            pricing?: Array<{ price?: string }>;
+          }) => ({
+            id: prop._id,
+            _id: prop._id,
+            title: prop.name || prop.title || 'Property',
+            location: prop.location,
+            price: prop.price,
+            bedrooms: prop.bedrooms || 0,
+            bathrooms: prop.bathrooms || 0,
+            area: prop.area || 0,
+            image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+            images: prop.images,
+            type: prop.subCategory || prop.type || 'Property',
+            listingFor: prop.listingFor,
+            propertyType: prop.propertyType,
+            pricing: prop.pricing,
+          })
+        );
+        setProperties(formatted);
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProperties();
   }, []);
-
-  const fetchProperties = async () => {
-    try {
-      const response = await fetch('/api/properties');
-      if (response.ok) {
-        const data = await response.json();
-        // Convert database properties to PropertyCard format
-        const formatted = data.map((prop: {
-          _id: string;
-          name?: string;
-          title?: string;
-          location: string;
-          price: number;
-          bedrooms?: number;
-          bathrooms?: number;
-          area?: number;
-          images?: string[];
-          subCategory?: string;
-          type?: string;
-          listingFor?: string;
-          propertyType?: string;
-          pricing?: Array<{ price?: string }>;
-        }) => ({
-          id: prop._id,
-          _id: prop._id,
-          title: prop.name || prop.title || 'Property',
-          location: prop.location,
-          price: prop.price,
-          bedrooms: prop.bedrooms || 0,
-          bathrooms: prop.bathrooms || 0,
-          area: prop.area || 0,
-          image: prop.images && prop.images.length > 0 ? prop.images[0] : "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop",
-          images: prop.images,
-          type: prop.subCategory || prop.type || 'Property',
-          listingFor: prop.listingFor,
-          propertyType: prop.propertyType,
-          pricing: prop.pricing,
-        }));
-        setDatabaseProperties(formatted);
-      }
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Merge database properties with demo data (database first, then demo)
-  const allProperties = [
-    ...databaseProperties,
-    ...demoProperties
-  ];
 
   return (
     <section className="py-24 bg-white">
@@ -168,8 +98,8 @@ export default function PropertyListings() {
             <div className="col-span-full text-center py-12">
               <div className="text-gray-500">Loading properties...</div>
             </div>
-          ) : allProperties.length > 0 ? (
-            allProperties.map((property) => (
+          ) : properties.length > 0 ? (
+            properties.map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))
           ) : (
@@ -182,4 +112,3 @@ export default function PropertyListings() {
     </section>
   );
 }
-

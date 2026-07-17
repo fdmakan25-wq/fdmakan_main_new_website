@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import SafeImage from '@/components/SafeImage';
+import { formatPropertyPrice } from '@/lib/property-details-display';
+import { getPropertyTypeLabel } from '@/lib/property-listing-options';
 
 interface Project {
   id: string | number;
@@ -16,14 +18,18 @@ interface PropertyProjectsCarouselProps {
   titleHighlight: string;
   titleRest: string;
   filterKey: 'showInTopSelling' | 'showInNewlyLaunched';
-  demoProjects: Project[];
   sortByDate?: boolean;
 }
+
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop';
 
 function ProjectCard({ project }: { project: Project }) {
   return (
     <div
-      onClick={() => { window.location.href = `/view-details/${String(project.id)}`; }}
+      onClick={() => {
+        window.location.href = `/view-details/${String(project.id)}`;
+      }}
       className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer h-full"
     >
       <div className="relative h-64 overflow-hidden">
@@ -69,11 +75,11 @@ export default function PropertyProjectsCarousel({
   titleHighlight,
   titleRest,
   filterKey,
-  demoProjects,
   sortByDate = false,
 }: PropertyProjectsCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [projects, setProjects] = useState<Project[]>(demoProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(3);
 
   useEffect(() => {
@@ -99,36 +105,39 @@ export default function PropertyProjectsCarousel({
           });
         }
 
-        const formatted: Project[] = filtered.map((prop: {
-          _id: string;
-          name: string;
-          price: number;
-          bedrooms?: number;
-          location: string;
-          images?: string[];
-        }) => ({
-          id: prop._id,
-          name: prop.name,
-          price: sortByDate
-            ? `₹ ${(prop.price / 10000000).toFixed(1)}Cr${prop.price > 10000000 ? ` - ₹ ${((prop.price * 1.5) / 10000000).toFixed(1)}Cr` : ''}`
-            : `₹ ${(prop.price / 10000000).toFixed(2)}Cr`,
-          typology: prop.bedrooms ? `${prop.bedrooms} - ${prop.bedrooms + 1} Bed Apartment` : 'Property',
-          location: prop.location,
-          image: prop.images?.[0] || demoProjects[0].image,
-        }));
+        const formatted: Project[] = filtered.map(
+          (prop: {
+            _id: string;
+            name: string;
+            price: number;
+            bedrooms?: number;
+            propertyType?: string;
+            listingFor?: string;
+            location: string;
+            images?: string[];
+            pricing?: Array<{ price?: string }>;
+          }) => ({
+            id: prop._id,
+            name: prop.name,
+            price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
+            typology: prop.bedrooms
+              ? `${prop.bedrooms} BHK`
+              : getPropertyTypeLabel(prop.propertyType || '') || 'Property',
+            location: prop.location,
+            image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+          })
+        );
 
-        const merged = formatted.length > 0
-          ? formatted
-          : [...formatted, ...demoProjects.slice(formatted.length)];
-
-        setProjects(merged.length >= 3 ? merged : [...merged, ...demoProjects].slice(0, Math.max(6, demoProjects.length)));
+        setProjects(formatted);
       } catch (error) {
         console.error('Error fetching properties:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProperties();
-  }, [filterKey, sortByDate, demoProjects]);
+  }, [filterKey, sortByDate]);
 
   const maxIndex = Math.max(0, projects.length - visibleCount);
 
@@ -150,7 +159,11 @@ export default function PropertyProjectsCarousel({
     setCurrentIndex((prev) => Math.min(prev, maxIndex));
   }, [maxIndex]);
 
-  const progressWidth = maxIndex > 0 ? ((currentIndex / maxIndex) * 100) : 100;
+  const progressWidth = maxIndex > 0 ? (currentIndex / maxIndex) * 100 : 100;
+
+  if (!loading && projects.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-14 bg-white">
@@ -162,55 +175,61 @@ export default function PropertyProjectsCarousel({
           </h2>
         </div>
 
-        <div className="relative">
-          <div className="overflow-hidden">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
-            >
-              {projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="flex-shrink-0 px-3"
-                  style={{ width: `${100 / visibleCount}%` }}
-                >
-                  <ProjectCard project={project} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center mt-12 space-x-4">
-            <div className="flex items-center space-x-2 w-36">
+        {loading ? (
+          <div className="text-center py-12 text-gray-400">Loading projects...</div>
+        ) : (
+          <div className="relative">
+            <div className="overflow-hidden">
               <div
-                className="h-1 bg-brand-red rounded transition-all duration-500"
-                style={{ width: `${Math.max(20, progressWidth)}%` }}
-              />
-              <div className="flex-1 h-1 bg-gray-300 rounded" />
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
+              >
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="flex-shrink-0 px-3"
+                    style={{ width: `${100 / visibleCount}%` }}
+                  >
+                    <ProjectCard project={project} />
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={prevSlide}
-              className="w-10 h-10 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-brand-red hover:bg-brand-red/10 transition"
-              aria-label="Previous"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={nextSlide}
-              className="w-10 h-10 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-brand-red hover:bg-brand-red/10 transition"
-              aria-label="Next"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+            {projects.length > visibleCount && (
+              <div className="flex items-center justify-center mt-12 space-x-4">
+                <div className="flex items-center space-x-2 w-36">
+                  <div
+                    className="h-1 bg-brand-red rounded transition-all duration-500"
+                    style={{ width: `${Math.max(20, progressWidth)}%` }}
+                  />
+                  <div className="flex-1 h-1 bg-gray-300 rounded" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={prevSlide}
+                  className="w-10 h-10 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-brand-red hover:bg-brand-red/10 transition"
+                  aria-label="Previous"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={nextSlide}
+                  className="w-10 h-10 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-brand-red hover:bg-brand-red/10 transition"
+                  aria-label="Next"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
