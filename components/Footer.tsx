@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Logo from '@/components/Logo';
-import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_OFFICE, CONTACT_BUILDING, CONTACT_CITY, CONTACT_MAPS_URL } from '@/lib/contact';
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_EMAIL, CONTACT_OFFICE, CONTACT_BUILDING, CONTACT_CITY, CONTACT_MAPS_URL } from '@/lib/contact';
 
 export default function Footer() {
   return (
@@ -99,7 +99,9 @@ export default function Footer() {
                 <svg className="w-4 h-4 text-brand-teal mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span>info@fdmakan.com</span>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-brand-teal transition">
+                  {CONTACT_EMAIL}
+                </a>
               </li>
               <li className="flex items-start">
                 <svg className="w-4 h-4 text-brand-red mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

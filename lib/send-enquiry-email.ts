@@ -89,7 +89,7 @@ function buildText(payload: EnquiryEmailPayload): string {
 }
 
 function getRecipientList(): string[] {
-  const raw = process.env.ENQUIRY_TO_EMAIL || 'sales@fdmakan.com';
+  const raw = process.env.ENQUIRY_TO_EMAIL || 'aman.dubey@fdmakan.com';
   return raw.split(',').map((email) => email.trim()).filter(Boolean);
 }
 

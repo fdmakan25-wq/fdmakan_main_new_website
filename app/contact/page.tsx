@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CallMeInstantlyCard from "@/components/CallMeInstantlyCard";
 import EnquiryIcon, { PhoneIcon } from "@/components/EnquiryIcon";
-import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_OFFICE, CONTACT_BUILDING, CONTACT_CITY, CONTACT_MAPS_URL } from "@/lib/contact";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_EMAIL, CONTACT_OFFICE, CONTACT_BUILDING, CONTACT_CITY, CONTACT_MAPS_URL } from "@/lib/contact";
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -183,7 +183,11 @@ export default function ContactPage() {
                     {
                       variant: 'navy' as const,
                       title: 'Email',
-                      content: <span className="text-white/85">info@fdmakan.com<br />support@fdmakan.com</span>,
+                      content: (
+                        <a href={`mailto:${CONTACT_EMAIL}`} className="text-white/85 hover:text-accent-orange transition">
+                          {CONTACT_EMAIL}
+                        </a>
+                      ),
                       icon: (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
