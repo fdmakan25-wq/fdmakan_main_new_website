@@ -8,6 +8,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json(
+        { error: 'Invalid blog ID format' },
+        { status: 400 }
+      );
+    }
+
     const db = await getDatabase();
     const blog = await db.collection('blogs').findOne({
       _id: new ObjectId(params.id),
@@ -36,6 +43,13 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json(
+        { error: 'Invalid blog ID format' },
+        { status: 400 }
+      );
+    }
+
     const db = await getDatabase();
     const body = await request.json();
 
@@ -89,6 +103,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json(
+        { error: 'Invalid blog ID format' },
+        { status: 400 }
+      );
+    }
+
     const db = await getDatabase();
     const result = await db.collection('blogs').deleteOne({
       _id: new ObjectId(params.id),

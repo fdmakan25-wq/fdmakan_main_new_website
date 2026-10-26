@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';

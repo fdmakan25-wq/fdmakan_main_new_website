@@ -8,7 +8,6 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: 'hero', label: 'Home' },
   { id: 'top-selling', label: 'Top Selling' },
   { id: 'newly-launched', label: 'Newly Launched' },
   { id: 'premium-projects', label: 'Premium Projects' },
@@ -20,56 +19,54 @@ const navItems: NavItem[] = [
 ];
 
 export default function PageNavigation() {
-  const [activeSection, setActiveSection] = useState('hero');
+  const [activeSection, setActiveSection] = useState('top-selling');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Show navigation after scrolling past hero section, hide when footer is visible
     const handleScroll = () => {
       const heroSection = document.getElementById('hero');
       const footerSection = document.getElementById('footer');
 
-      if (heroSection && footerSection) {
-        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-        const footerTop = footerSection.offsetTop;
-        const scrollPosition = window.scrollY + window.innerHeight;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const windowHeight = window.innerHeight;
+      const heroHeight = heroSection?.offsetHeight || 600;
 
-        // Show sidebar if past hero and not at footer
-        const pastHero = window.scrollY > heroBottom - 100;
-        const beforeFooter = scrollPosition < footerTop - 50;
+      // Show sidebar once scrolled past the hero section (300px threshold)
+      const pastHero = scrollY > 280;
 
-        setIsVisible(pastHero && beforeFooter);
-      } else if (heroSection) {
-        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-        setIsVisible(window.scrollY > heroBottom - 100);
+      // Hide sidebar before overlapping with footer
+      let beforeFooter = true;
+      if (footerSection) {
+        const footerRect = footerSection.getBoundingClientRect();
+        // If top of footer is near the middle of viewport, hide sidebar
+        beforeFooter = footerRect.top > windowHeight / 2;
       }
 
-      // Determine active section based on scroll position
-      const sections = navItems.map(item => ({
-        id: item.id,
-        element: document.getElementById(item.id),
-      })).filter(section => section.element !== null);
+      setIsVisible(pastHero && beforeFooter);
 
-      const scrollPosition = window.scrollY + 250; // Offset for better detection
+      // Determine active section using getBoundingClientRect
+      const midScreen = windowHeight * 0.35;
+      let currentSection = navItems[0].id;
 
-      // Find the section currently in view
-      let currentSection = 'hero';
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section.element) {
-          const sectionTop = section.element.offsetTop;
-          const sectionHeight = section.element.offsetHeight;
-          if (scrollPosition >= sectionTop - 100 && scrollPosition < sectionTop + sectionHeight) {
-            currentSection = section.id;
+      for (const item of navItems) {
+        const el = document.getElementById(item.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // If the section top is above middle of the screen and bottom is below top
+          if (rect.top <= midScreen && rect.bottom >= midScreen) {
+            currentSection = item.id;
             break;
+          } else if (rect.top <= midScreen) {
+            currentSection = item.id;
           }
         }
       }
+
       setActiveSection(currentSection);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -77,7 +74,7 @@ export default function PageNavigation() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const headerOffset = 80; // Account for fixed header
+      const headerOffset = 85;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -91,26 +88,27 @@ export default function PageNavigation() {
   if (!isVisible) return null;
 
   return (
-    <nav className="fixed left-6 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block sidebar-slide-in">
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border-2 border-gray-100 p-3">
+    <nav 
+      aria-label="Section navigation"
+      className="fixed left-3 sm:left-5 top-1/2 -translate-y-1/2 z-40 hidden xl:block transition-all duration-300 pointer-events-auto"
+    >
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/80 p-2 max-h-[85vh] overflow-y-auto scrollbar-hide">
         <div className="flex flex-col space-y-1">
           {navItems.map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => scrollToSection(item.id)}
               className={`
-                relative px-3 py-2.5 text-xs font-semibold rounded-lg transition-all duration-300 text-left
+                group relative px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 text-left cursor-pointer flex items-center justify-between gap-2
                 ${activeSection === item.id
-                  ? 'bg-brand-red text-white shadow-md scale-105'
-                  : 'text-gray-600 hover:text-brand-red hover:bg-brand-red/10'
+                  ? 'bg-brand-red text-white shadow-sm font-bold'
+                  : 'text-slate-600 hover:text-brand-red hover:bg-slate-50'
                 }
               `}
               title={item.label}
             >
-              <span className="block whitespace-nowrap">{item.label}</span>
-              {activeSection === item.id && (
-                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-3 w-1.5 h-8 bg-brand-red rounded-r-full"></div>
-              )}
+              <span className="block whitespace-nowrap text-[11px] leading-tight">{item.label}</span>
             </button>
           ))}
         </div>

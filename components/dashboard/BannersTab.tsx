@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useToast } from '@/components/ToastProvider';
 
 interface Banner {
   _id: string;
@@ -37,16 +38,18 @@ export default function BannersTab() {
     }
   };
 
+  const toast = useToast();
+
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this hero banner slide?')) return;
     try {
       const response = await fetch(`/api/banners/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete');
-      alert('Banner deleted!');
+      toast.success('Banner deleted!');
       fetchBanners();
     } catch (error) {
       console.error(error);
-      alert('Failed to delete banner');
+      toast.error('Failed to delete banner');
     }
   };
 
@@ -168,6 +171,8 @@ function BannerFormModal({
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const toast = useToast();
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -190,9 +195,10 @@ function BannerFormModal({
 
       const data = await response.json();
       setFormData((prev) => ({ ...prev, image: data.url }));
+      toast.success('Banner image uploaded!');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Upload failed';
-      alert(message);
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -201,7 +207,7 @@ function BannerFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.subtitle.trim() || !formData.image.trim()) {
-      alert('Please fill title, subtitle, and upload a banner image');
+      toast.warning('Please fill title, subtitle, and upload a banner image');
       return;
     }
 
@@ -221,11 +227,11 @@ function BannerFormModal({
         throw new Error(err.message || err.error || 'Failed to save');
       }
 
-      alert(banner ? 'Banner updated!' : 'Banner created!');
+      toast.success(banner ? 'Banner updated!' : 'Banner created!');
       onSuccess();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save banner';
-      alert(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

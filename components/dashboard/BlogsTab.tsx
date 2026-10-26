@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ToastProvider';
 
 interface Blog {
   _id: string;
@@ -55,6 +56,8 @@ export default function BlogsTab() {
     setShowModal(true);
   };
 
+  const toast = useToast();
+
   const handleDeleteBlog = async (id: string) => {
     if (!confirm('Are you sure you want to delete this blog?')) {
       return;
@@ -67,11 +70,11 @@ export default function BlogsTab() {
 
       if (!response.ok) throw new Error('Failed to delete blog');
 
-      alert('Blog deleted successfully!');
+      toast.success('Blog deleted successfully!');
       fetchBlogs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting blog:', error);
-      alert('Failed to delete blog');
+      toast.error(error.message || 'Failed to delete blog');
     }
   };
 
@@ -222,21 +225,22 @@ function BlogFormModal({
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Client-side validation
     if (!formData.title.trim()) {
-      alert('Please enter a blog title');
+      toast.warning('Please enter a blog title');
       return;
     }
     if (!formData.author.trim()) {
-      alert('Please enter an author name');
+      toast.warning('Please enter an author name');
       return;
     }
     if (!formData.excerpt.trim()) {
-      alert('Please enter an excerpt');
+      toast.warning('Please enter an excerpt');
       return;
     }
 
@@ -261,14 +265,14 @@ function BlogFormModal({
         throw new Error(errorMessage);
       }
 
-      alert(blog ? 'Blog updated successfully!' : 'Blog created successfully!');
+      toast.success(blog ? 'Blog updated successfully!' : 'Blog created successfully!');
       // Small delay to ensure database is updated
       setTimeout(() => {
         onSuccess();
       }, 100);
     } catch (error: any) {
       console.error('Error saving blog:', error);
-      alert(error.message || 'Failed to save blog');
+      toast.error(error.message || 'Failed to save blog');
     } finally {
       setSubmitting(false);
     }

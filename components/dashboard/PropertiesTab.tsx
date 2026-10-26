@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useToast } from '@/components/ToastProvider';
 import {
   STRUCTURE_QUALITY_OPTIONS,
   LIVING_DINING_FLOORING_OPTIONS,
@@ -337,6 +338,8 @@ export default function PropertiesTab() {
     setShowModal(true);
   };
 
+  const toast = useToast();
+
   const handleDeleteProperty = async (id: string) => {
     if (!confirm('Are you sure you want to delete this property?')) {
       return;
@@ -345,10 +348,11 @@ export default function PropertiesTab() {
     try {
       const response = await fetch(`/api/properties/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete property');
+      toast.success('Property deleted successfully!');
       await fetchProperties();
     } catch (error) {
       console.error('Error deleting property:', error);
-      alert('Failed to delete property');
+      toast.error('Failed to delete property');
     }
   };
 
@@ -748,6 +752,8 @@ function PropertyFormModal({
     }
   }, [property, cities]);
 
+  const formToast = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -947,14 +953,14 @@ function PropertyFormModal({
         throw new Error(errorMessage);
       }
 
-      alert(property ? 'Property updated successfully!' : 'Property created successfully!');
+      formToast.success(property ? 'Property updated successfully!' : 'Property created successfully!');
       // Small delay to ensure database is updated
       setTimeout(() => {
         onSuccess();
       }, 100);
     } catch (error: any) {
       console.error('Error saving property:', error);
-      alert(error.message || 'Failed to save property');
+      formToast.error(error.message || 'Failed to save property');
     } finally {
       setSubmitting(false);
     }

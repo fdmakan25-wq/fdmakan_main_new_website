@@ -45,12 +45,11 @@ export default clientPromise;
 export async function getDatabase(): Promise<Db> {
   try {
     const client = await clientPromise;
-    // Test connection
-    await client.db(dbName).admin().ping();
     return client.db(dbName);
   } catch (error) {
     console.error('MongoDB connection error:', error);
     throw error;
   }
 }
+
 

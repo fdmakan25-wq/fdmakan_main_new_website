@@ -47,6 +47,7 @@ function PropertiesContent() {
   const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || 'all');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || '');
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchProperties();
@@ -134,6 +135,12 @@ function PropertiesContent() {
   };
 
   const hasActiveFilters = search || locationFilter !== 'all' || statusFilter || typeFilter;
+  const activeFilterCount = [
+    Boolean(search.trim()),
+    locationFilter && locationFilter !== 'all',
+    Boolean(statusFilter),
+    Boolean(typeFilter),
+  ].filter(Boolean).length;
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -165,10 +172,144 @@ function PropertiesContent() {
         </div>
       </section>
 
-      <section className="sticky top-[72px] z-20 bg-white border-b border-gray-100 shadow-sm">
-        <div className="container mx-auto px-4 max-w-7xl py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            <div className="relative sm:col-span-2 lg:col-span-1">
+      {/* Filter Section */}
+      <section className="bg-white border-b border-gray-100 shadow-xs lg:sticky lg:top-[72px] lg:z-20">
+        <div className="container mx-auto px-4 max-w-7xl py-3 md:py-4">
+          {/* Mobile Filter Bar (Compact Search + Toggle Button) */}
+          <div className="lg:hidden space-y-2.5">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search project, area..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') applyFilters();
+                  }}
+                  className="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-xs sm:text-sm"
+                />
+              </div>
+
+              {/* Filter Dropdown Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold transition ${
+                  isMobileFilterOpen || activeFilterCount > 0
+                    ? 'bg-navy-blue text-white border-navy-blue shadow-sm'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span>Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-5 h-5 flex items-center justify-center rounded-full bg-brand-orange text-white text-[11px] font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Collapsible Mobile Dropdown Panel */}
+            {isMobileFilterOpen && (
+              <div className="pt-2 pb-1 border-t border-gray-100 mt-2 space-y-3 animate-fadeIn">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Location
+                    </label>
+                    <select
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium text-xs sm:text-sm focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal outline-none"
+                    >
+                      <option value="all">All Locations</option>
+                      {locations.map((loc) => (
+                        <option key={loc} value={loc}>{loc}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Collection / Status
+                    </label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium text-xs sm:text-sm focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal outline-none"
+                    >
+                      <option value="">All Collections</option>
+                      <option value="newly-launched">Newly Launched</option>
+                      <option value="top-selling">Top Selling</option>
+                      <option value="top-picks">Top Picks</option>
+                      <option value="premium">Premium Projects</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Typology
+                    </label>
+                    <select
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium text-xs sm:text-sm focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal outline-none"
+                    >
+                      <option value="">All Typologies</option>
+                      <option value="1rk">1 RK</option>
+                      <option value="1bhk">1 BHK</option>
+                      <option value="2bhk">2 BHK</option>
+                      <option value="3bhk">3 BHK</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      applyFilters();
+                      setIsMobileFilterOpen(false);
+                    }}
+                    className="flex-1 py-2.5 bg-navy-blue text-white rounded-xl font-semibold hover:bg-brand-teal transition text-xs sm:text-sm shadow-sm"
+                  >
+                    Apply Filters
+                  </button>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearFilters();
+                        setIsMobileFilterOpen(false);
+                      }}
+                      className="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-100 transition text-xs sm:text-sm font-medium"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Filter Bar (Horizontal Row, Sticky on Desktop) */}
+          <div className="hidden lg:grid grid-cols-5 gap-3">
+            <div className="relative">
               <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -184,7 +325,7 @@ function PropertiesContent() {
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-sm"
+              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-sm cursor-pointer"
             >
               <option value="all">All Locations</option>
               {locations.map((loc) => (
@@ -194,9 +335,9 @@ function PropertiesContent() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-sm"
+              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-sm cursor-pointer"
             >
-              <option value="">All Properties</option>
+              <option value="">All Collections</option>
               <option value="newly-launched">Newly Launched</option>
               <option value="top-selling">Top Selling</option>
               <option value="top-picks">Top Picks</option>
@@ -205,9 +346,9 @@ function PropertiesContent() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-sm"
+              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal transition text-sm cursor-pointer"
             >
-              <option value="">All Types</option>
+              <option value="">All Typologies</option>
               <option value="1rk">1 RK</option>
               <option value="1bhk">1 BHK</option>
               <option value="2bhk">2 BHK</option>
@@ -225,7 +366,7 @@ function PropertiesContent() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="px-4 py-3 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition text-sm"
+                  className="px-4 py-3 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition text-sm font-medium"
                 >
                   Clear
                 </button>

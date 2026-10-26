@@ -4,6 +4,8 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { ToastProvider } from '@/components/ToastProvider';
+
 interface DashboardLayoutProps {
   children: ReactNode;
   activeTab: string;
@@ -24,7 +26,8 @@ const tabs = [
 
 export default function DashboardLayout({ children, activeTab, onTabChange }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ToastProvider>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +44,7 @@ export default function DashboardLayout({ children, activeTab, onTabChange }: Da
               />
             </Link>
 
-            {/* Admin Profile */}
+            {/* Admin Profile & Logout */}
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-semibold text-gray-900">Admin</p>
@@ -50,6 +53,16 @@ export default function DashboardLayout({ children, activeTab, onTabChange }: Da
               <div className="w-10 h-10 bg-gradient-to-br from-brand-teal to-brand-red rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-sm">A</span>
               </div>
+              <button
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/admin/login';
+                }}
+                className="ml-2 inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 hover:text-red-600 focus:outline-none transition cursor-pointer"
+                title="Sign out"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -84,6 +97,7 @@ export default function DashboardLayout({ children, activeTab, onTabChange }: Da
         {children}
       </main>
     </div>
+    </ToastProvider>
   );
 }
 

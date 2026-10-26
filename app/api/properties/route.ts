@@ -1,13 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { uploadImage, uploadVideo } from '@/lib/cloudinary';
+import { PropertyInputSchema } from '@/lib/validations';
 
-// GET - Fetch all properties
+// GET - Fetch properties (supports optional pagination and filter queries)
 export async function GET(request: NextRequest) {
   try {
     const db = await getDatabase();
-    const properties = await db.collection('properties').find({}).sort({ createdAt: -1 }).toArray();
+    const searchParams = request.nextUrl.searchParams;
 
+    // Filters
+    const query: Record<string, any> = {};
+    const city = searchParams.get('city');
+    const category = searchParams.get('propertyCategory') || searchParams.get('category');
+    const featured = searchParams.get('featured');
+
+    if (city && city.trim() !== '') {
+      query.city = { $regex: new RegExp(`^${city.trim()}$`, 'i') };
+    }
+    if (category && category.trim() !== '') {
+      query.propertyCategory = category.trim();
+    }
+    if (featured === 'topSelling') {
+      query.showInTopSelling = true;
+    } else if (featured === 'premium') {
+      query.showInPremium = true;
+    } else if (featured === 'newlyLaunched') {
+      query.showInNewlyLaunched = true;
+    }
+
+    // Pagination (optional to preserve existing full array calls)
+    const pageParam = searchParams.get('page');
+    const limitParam = searchParams.get('limit');
+
+    if (pageParam || limitParam) {
+      const page = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+      const limit = Math.max(1, Math.min(100, parseInt(limitParam || '20', 10) || 20));
+      const skip = (page - 1) * limit;
+
+      const [properties, total] = await Promise.all([
+        db.collection('properties').find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).toArray(),
+        db.collection('properties').countDocuments(query),
+      ]);
+
+      return NextResponse.json({
+        properties,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      }, { status: 200 });
+    }
+
+    // Default: fetch all properties with sort
+    const properties = await db.collection('properties').find(query).sort({ createdAt: -1 }).toArray();
     return NextResponse.json(properties, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching properties:', error);
@@ -22,7 +70,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const db = await getDatabase();
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    // Validate request body using Zod schema
+    const parseResult = PropertyInputSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.issues[0]?.message || 'Validation failed';
+      return NextResponse.json(
+        { 
+          error: firstError, 
+          message: firstError,
+          details: parseResult.error.issues.map(i => ({ path: i.path.join('.'), message: i.message }))
+        },
+        { status: 400 }
+      );
+    }
 
     const {
       name,
@@ -66,52 +128,7 @@ export async function POST(request: NextRequest) {
       // Connectivity
       connectivity,
       reraQrCode,
-    } = body;
-
-    // Validate required fields with specific error messages
-    if (!name || name.trim() === '') {
-      return NextResponse.json(
-        { error: 'Property name is required', message: 'Property name is required' },
-        { status: 400 }
-      );
-    }
-    if (!description || description.trim() === '') {
-      return NextResponse.json(
-        { error: 'Description is required', message: 'Description is required' },
-        { status: 400 }
-      );
-    }
-    if (!price || price === 0 || isNaN(price)) {
-      return NextResponse.json(
-        { error: 'Price is required and must be greater than 0', message: 'Price is required and must be greater than 0' },
-        { status: 400 }
-      );
-    }
-    if (!developer || developer.trim() === '') {
-      return NextResponse.json(
-        { error: 'Developer is required', message: 'Developer is required' },
-        { status: 400 }
-      );
-    }
-    if (!location || location.trim() === '') {
-      return NextResponse.json(
-        { error: 'Location is required', message: 'Location is required' },
-        { status: 400 }
-      );
-    }
-    if (!city || city.trim() === '') {
-      return NextResponse.json(
-        { error: 'City is required', message: 'City is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!images || images.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one image is required', message: 'At least one image is required' },
-        { status: 400 }
-      );
-    }
+    } = parseResult.data;
 
     // Upload images to Cloudinary (if they are files, not URLs)
     const uploadedImages: string[] = [];
@@ -142,7 +159,7 @@ export async function POST(request: NextRequest) {
     const property = {
       name,
       description,
-      price: parseFloat(price),
+      price,
       developer,
       city,
       location,
@@ -152,9 +169,9 @@ export async function POST(request: NextRequest) {
       propertyCategory: propertyCategory || undefined,
       propertyType: propertyType || undefined,
       categoryFields: categoryFields && Object.keys(categoryFields).length > 0 ? categoryFields : undefined,
-      bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
-      bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
-      area: area ? parseInt(area) : undefined,
+      bedrooms: bedrooms ?? undefined,
+      bathrooms: bathrooms ?? undefined,
+      area: area ?? undefined,
       available: available !== false,
       images: uploadedImages,
       videos: uploadedVideos.length > 0 ? uploadedVideos : undefined,

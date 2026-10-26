@@ -74,57 +74,56 @@ export default function PremiumProjects() {
   const bottomProjects = projects.slice(2, 5);
 
   return (
-    <section className="py-14 bg-white">
+    <section className="py-7 md:py-9 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold flex items-center">
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold flex items-center">
             <span className="text-brand-red">Premium</span>
-            <span className="text-gray-900 ml-4">Projects</span>
+            <span className="text-gray-900 ml-3">Projects</span>
           </h2>
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading premium projects...</div>
+          <div className="text-center py-10 text-gray-400">Loading premium projects...</div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {topProjects.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {topProjects.map((project) => (
                   <div
                     key={project.id}
                     onClick={() => {
                       window.location.href = `/view-details/${project.id}`;
                     }}
-                    className="group relative h-[400px] md:h-[500px] rounded-xl overflow-hidden cursor-pointer"
+                    className="group relative h-[260px] md:h-[320px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
                   >
                     <div className="absolute inset-0">
                       <SafeImage
                         src={project.image}
                         alt={project.name}
                         fill
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-700" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
                     </div>
 
-                    <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
+                    <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-6">
                       <div>
-                        <h3 className="text-white text-2xl md:text-3xl font-bold uppercase tracking-wide mb-2">
+                        <h3 className="text-white text-xl md:text-2xl font-bold uppercase tracking-wide mb-1">
                           {project.name}
                         </h3>
-                        <div className="h-1 bg-brand-red w-0 group-hover:w-full transition-all duration-500 ease-out mb-3" />
+                        <div className="h-0.5 bg-brand-red w-12 group-hover:w-full transition-all duration-500 ease-out mb-2" />
                         {project.description && (
-                          <p className="text-white/90 text-sm md:text-base max-w-md leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                          <p className="text-white/90 text-xs md:text-sm max-w-md leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 line-clamp-2">
                             {project.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                        <div className="text-white space-y-2">
-                          <div className="text-lg font-semibold">{project.price}</div>
-                          <div className="text-sm">{project.typology}</div>
-                          <div className="text-sm">{project.location}</div>
+                      <div className="opacity-90 group-hover:opacity-100 transition-opacity">
+                        <div className="text-white space-y-1">
+                          <div className="text-base md:text-lg font-bold text-white">{project.price}</div>
+                          <div className="text-xs text-white/80">{project.typology} • {project.location}</div>
                         </div>
                       </div>
                     </div>
@@ -134,43 +133,42 @@ export default function PremiumProjects() {
             )}
 
             {bottomProjects.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {bottomProjects.map((project) => (
                   <div
                     key={project.id}
                     onClick={() => {
                       window.location.href = `/view-details/${project.id}`;
                     }}
-                    className="group relative h-[350px] md:h-[400px] rounded-xl overflow-hidden cursor-pointer"
+                    className="group relative h-[230px] md:h-[260px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
                   >
                     <div className="absolute inset-0">
                       <SafeImage
                         src={project.image}
                         alt={project.name}
                         fill
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-700" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
                     </div>
 
-                    <div className="absolute inset-0 flex flex-col justify-between p-6">
+                    <div className="absolute inset-0 flex flex-col justify-between p-4">
                       <div>
-                        <h3 className="text-white text-xl md:text-2xl font-bold uppercase tracking-wide mb-2">
+                        <h3 className="text-white text-base md:text-lg font-bold uppercase tracking-wide mb-1">
                           {project.name}
                         </h3>
-                        <div className="h-1 bg-brand-red w-0 group-hover:w-full transition-all duration-500 ease-out mb-3" />
+                        <div className="h-0.5 bg-brand-red w-8 group-hover:w-full transition-all duration-500 ease-out mb-2" />
                         {project.description && (
-                          <p className="text-white/90 text-xs md:text-sm max-w-xs leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-700 line-clamp-2">
+                          <p className="text-white/90 text-[11px] max-w-xs leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 line-clamp-2">
                             {project.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                        <div className="text-white space-y-1">
-                          <div className="text-base font-semibold">{project.price}</div>
-                          <div className="text-xs">{project.typology}</div>
-                          <div className="text-xs">{project.location}</div>
+                      <div className="opacity-90 group-hover:opacity-100 transition-opacity">
+                        <div className="text-white space-y-0.5">
+                          <div className="text-sm font-bold">{project.price}</div>
+                          <div className="text-[11px] text-white/80">{project.typology} • {project.location}</div>
                         </div>
                       </div>
                     </div>

@@ -39,25 +39,35 @@ export default function StatsSection() {
   ];
 
   return (
-    <section className="py-14 bg-gray-100">
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <section className="py-8 md:py-12 bg-gradient-to-b from-white via-slate-50 to-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
+        <div className="text-center max-w-2xl mx-auto mb-8">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-brand-teal bg-brand-teal/10 px-2.5 py-0.5 rounded-full mb-1.5">
+            Our Track Record
+          </span>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+            Trusted by Thousands Across India
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              {/* Icon */}
-              <div className="flex justify-center mb-6">
-                <div className="text-brand-red">
+            <div
+              key={index}
+              className="group bg-white rounded-2xl p-4 sm:p-5 text-center border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center relative overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-brand-red/10 to-brand-red/5 flex items-center justify-center mb-3 text-brand-red group-hover:scale-105 group-hover:bg-brand-red group-hover:text-white transition-all duration-300">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center">
                   {stat.icon}
                 </div>
               </div>
-              
-              {/* Number */}
-              <div className="text-5xl md:text-6xl font-bold text-gray-800 mb-3">
+
+              <div className="text-2xl sm:text-3xl font-black text-gray-900 mb-1 tracking-tight group-hover:text-brand-red transition-colors">
                 {stat.number}
               </div>
-              
-              {/* Label */}
-              <div className="text-gray-700 text-lg font-medium">
+
+              <div className="text-gray-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wider">
                 {stat.label}
               </div>
             </div>

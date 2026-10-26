@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ToastProvider';
 
 interface LocationItem {
   _id: string;
@@ -82,15 +83,18 @@ export default function LocationsTab() {
     setModalType('location');
   };
 
+  const toast = useToast();
+
   const handleDeleteCity = async (id: string) => {
     if (!confirm('Delete this city and all locations under it?')) return;
     try {
       const response = await fetch(`/api/cities/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete city');
+      toast.success('City deleted successfully!');
       fetchData();
     } catch (error) {
       console.error('Error deleting city:', error);
-      alert('Failed to delete city');
+      toast.error('Failed to delete city');
     }
   };
 
@@ -99,17 +103,18 @@ export default function LocationsTab() {
     try {
       const response = await fetch(`/api/locations/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete location');
+      toast.success('Location deleted successfully!');
       fetchData();
     } catch (error) {
       console.error('Error deleting location:', error);
-      alert('Failed to delete location');
+      toast.error('Failed to delete location');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert(`Please enter a ${modalType === 'city' ? 'city' : 'location'} name`);
+      toast.warning(`Please enter a ${modalType === 'city' ? 'city' : 'location'} name`);
       return;
     }
 
@@ -125,12 +130,13 @@ export default function LocationsTab() {
         });
         const data = await response.json();
         if (!response.ok) {
-          alert(data.error || 'Failed to save city');
+          toast.error(data.error || 'Failed to save city');
           return;
         }
+        toast.success(editingCity ? 'City updated successfully!' : 'City created successfully!');
       } else if (modalType === 'location') {
         if (!selectedCityId) {
-          alert('Please select a city');
+          toast.warning('Please select a city');
           return;
         }
         const url = editingLocation
@@ -144,16 +150,17 @@ export default function LocationsTab() {
         });
         const data = await response.json();
         if (!response.ok) {
-          alert(data.error || 'Failed to save location');
+          toast.error(data.error || 'Failed to save location');
           return;
         }
+        toast.success(editingLocation ? 'Location updated successfully!' : 'Location created successfully!');
       }
 
       closeModal();
       fetchData();
     } catch (error) {
       console.error('Error saving:', error);
-      alert('Failed to save');
+      toast.error('Failed to save');
     } finally {
       setSubmitting(false);
     }

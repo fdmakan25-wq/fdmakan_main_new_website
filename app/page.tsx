@@ -31,7 +31,7 @@ export default function Home() {
       <div id="hero">
         <Hero />
       </div>
-      <div className="lg:pl-[200px] relative z-10 bg-white">
+      <div className="xl:pl-[165px] 2xl:pl-[180px] relative z-10 bg-white transition-all duration-300">
         <div id="top-selling">
           <TopSellingProjects />
         </div>

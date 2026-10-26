@@ -218,15 +218,58 @@ export default function Header() {
         </div>
 
         {isMenuOpen && (
-          <div className={`md:hidden mt-4 space-y-2 pb-4 ${lightNav ? 'text-white' : ''}`}>
-            <Link href="/" className={`block py-2 transition ${lightNav ? 'hover:text-white/80' : 'text-gray-700 hover:text-brand-red'}`} onClick={() => setIsMenuOpen(false)}>Home +</Link>
-            <Link href="/properties" className={`block py-2 transition ${lightNav ? 'hover:text-white/80' : 'text-gray-700 hover:text-brand-red'}`} onClick={() => setIsMenuOpen(false)}>Property +</Link>
-            <Link href="/blogs" className={`block py-2 transition ${lightNav ? 'hover:text-white/80' : 'text-gray-700 hover:text-brand-red'}`} onClick={() => setIsMenuOpen(false)}>Blogs +</Link>
-            <Link href="/pages" className={`block py-2 transition ${lightNav ? 'hover:text-white/80' : 'text-gray-700 hover:text-brand-red'}`} onClick={() => setIsMenuOpen(false)}>Services +</Link>
-            <Link href="/about" className={`block py-2 transition ${lightNav ? 'hover:text-white/80' : 'text-gray-700 hover:text-brand-red'}`} onClick={() => setIsMenuOpen(false)}>About +</Link>
-            <Link href="/contact" className={`block py-2 transition ${lightNav ? 'hover:text-white/80' : 'text-gray-700 hover:text-brand-red'}`} onClick={() => setIsMenuOpen(false)}>Contact +</Link>
+          <div className="md:hidden mt-3 p-4 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200/80 shadow-2xl space-y-1 animate-in fade-in slide-in-from-top-2">
+            <Link
+              href="/"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-slate-100 hover:text-brand-red transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>Home</span>
+              <span className="text-xs text-brand-teal">+</span>
+            </Link>
+            <Link
+              href="/properties"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-slate-100 hover:text-brand-red transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>Properties</span>
+              <span className="text-xs text-brand-teal">+</span>
+            </Link>
+            <Link
+              href="/blogs"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-slate-100 hover:text-brand-red transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>Blogs & News</span>
+              <span className="text-xs text-brand-teal">+</span>
+            </Link>
+            <Link
+              href="/pages"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-slate-100 hover:text-brand-red transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>Services</span>
+              <span className="text-xs text-brand-teal">+</span>
+            </Link>
+            <Link
+              href="/about"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-slate-100 hover:text-brand-red transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>About Us</span>
+              <span className="text-xs text-brand-teal">+</span>
+            </Link>
+            <Link
+              href="/contact"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-slate-100 hover:text-brand-red transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>Contact Us</span>
+              <span className="text-xs text-brand-teal">+</span>
+            </Link>
           </div>
         )}
+
       </nav>
     </header>
   );

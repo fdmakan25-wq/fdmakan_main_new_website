@@ -1,30 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ToastProvider';
 
 interface Order {
   _id: string;
   orderNumber: string;
-  type?: 'order' | 'call_back' | 'site_visit' | 'presentation';
+  type?: 'order' | 'call_back' | 'site_visit' | 'presentation' | 'contact';
   customer: {
     name: string;
     email: string;
     phone?: string;
   };
-  items: Array<{
+  items?: Array<{
     property: string;
-    quantity: number;
-    price: number;
+    quantity?: number;
+    price?: number;
   }>;
-  total: number;
+  propertyName?: string;
+  total?: number;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   metadata?: {
     visitDate?: string;
     rideType?: string;
     date?: string;
+    [key: string]: unknown;
   };
+  subject?: string;
+  message?: string;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export default function OrdersTab() {
@@ -32,6 +38,9 @@ export default function OrdersTab() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     fetchOrders();
@@ -55,13 +64,44 @@ export default function OrdersTab() {
     }
   };
 
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      setStatusUpdating(true);
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to update status');
+      }
+
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? { ...o, status: newStatus as any } : o))
+      );
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder((prev) => prev ? { ...prev, status: newStatus as any } : null);
+      }
+      toast.success(`Status updated to ${newStatus.toUpperCase()}`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update status');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const q = searchQuery.toLowerCase();
+    const propName = order.items?.[0]?.property || order.propertyName || '';
     const matchesSearch =
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.items?.[0]?.property?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+      order.orderNumber.toLowerCase().includes(q) ||
+      (order.customer?.name || '').toLowerCase().includes(q) ||
+      (order.customer?.email || '').toLowerCase().includes(q) ||
+      (order.customer?.phone || '').includes(q) ||
+      propName.toLowerCase().includes(q);
     return matchesStatus && matchesSearch;
   });
 
@@ -74,32 +114,34 @@ export default function OrdersTab() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      confirmed: 'bg-green-100 text-green-800',
-      processing: 'bg-blue-100 text-blue-800',
-      shipped: 'bg-purple-100 text-purple-800',
-      delivered: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      confirmed: 'bg-green-100 text-green-800 border-green-200',
+      processing: 'bg-blue-100 text-blue-800 border-blue-200',
+      shipped: 'bg-purple-100 text-purple-800 border-purple-200',
+      delivered: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      cancelled: 'bg-red-100 text-red-800 border-red-200',
     };
-    return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
+    return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   const getTypeBadge = (type: string = 'order') => {
     const styles = {
-      order: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      call_back: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      site_visit: 'bg-amber-100 text-amber-800 border-amber-200',
-      presentation: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+      order: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      call_back: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      site_visit: 'bg-amber-50 text-amber-700 border-amber-200',
+      presentation: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+      contact: 'bg-rose-50 text-rose-700 border-rose-200',
     };
     const labels = {
       order: 'Order',
       call_back: 'Call Back',
       site_visit: 'Site Visit',
       presentation: 'Online Demo',
+      contact: 'Contact Form',
     };
     return (
-      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md border uppercase tracking-wider ${styles[type as keyof typeof styles]}`}>
-        {labels[type as keyof typeof labels]}
+      <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${styles[type as keyof typeof styles] || styles.order}`}>
+        {labels[type as keyof typeof labels] || type}
       </span>
     );
   };
@@ -107,7 +149,10 @@ export default function OrdersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading orders...</div>
+        <div className="flex items-center gap-2 text-gray-500 font-medium">
+          <div className="w-5 h-5 border-2 border-brand-red border-t-transparent rounded-full animate-spin"></div>
+          Loading enquiries...
+        </div>
       </div>
     );
   }
@@ -116,7 +161,7 @@ export default function OrdersTab() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Enquiries & Orders</h1>
-        <p className="text-gray-600 mt-2">Manage customer enquiries and property bookings</p>
+        <p className="text-gray-600 mt-2">Manage customer enquiries, callback requests, and site visits</p>
       </div>
 
       {/* Statistics Cards */}
@@ -125,27 +170,27 @@ export default function OrdersTab() {
           <div className="text-sm font-medium text-gray-600">Total Requests</div>
           <div className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</div>
         </div>
-        <div className="bg-yellow-50 rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Pending</div>
+        <div className="bg-yellow-50 rounded-xl p-6 shadow-sm border border-yellow-200">
+          <div className="text-sm font-medium text-yellow-800">Pending</div>
           <div className="text-3xl font-bold text-yellow-600 mt-2">{stats.pending}</div>
         </div>
-        <div className="bg-blue-50 rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Processing</div>
+        <div className="bg-blue-50 rounded-xl p-6 shadow-sm border border-blue-200">
+          <div className="text-sm font-medium text-blue-800">Processing</div>
           <div className="text-3xl font-bold text-blue-600 mt-2">{stats.processing}</div>
         </div>
-        <div className="bg-green-50 rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Resolved</div>
+        <div className="bg-green-50 rounded-xl p-6 shadow-sm border border-green-200">
+          <div className="text-sm font-medium text-green-800">Resolved</div>
           <div className="text-3xl font-bold text-green-600 mt-2">{stats.delivered}</div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+      {/* Filter and Search */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Search by ID, customer name, email, or property..."
+              placeholder="Search by ID, customer name, email, phone, or property..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
@@ -161,8 +206,7 @@ export default function OrdersTab() {
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
+              <option value="delivered">Delivered / Resolved</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
@@ -182,99 +226,288 @@ export default function OrdersTab() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     ID / Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Customer Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Property
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Request Info
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">{order.orderNumber}</div>
-                      <div className="mt-1">{getTypeBadge(order.type)}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{order.customer.name}</div>
-                      <div className="text-xs text-gray-500">{order.customer.email}</div>
-                      {order.customer.phone && (
-                        <div className="text-xs text-brand-teal font-bold mt-1">📞 {order.customer.phone}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 font-medium">
-                        {order.items?.[0]?.property || 'Property Inquiry'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {(order.type === 'site_visit' || order.type === 'presentation') && order.metadata && (
-                        <div className="text-xs">
-                          <div className="font-bold text-gray-700">
-                            {order.type === 'site_visit' ? 'Visit' : 'Demo'}: {new Date(order.metadata.visitDate || order.metadata.date || '').toLocaleString()}
-                          </div>
-                          {order.type === 'site_visit' && <div className="text-gray-500">Ride: {order.metadata.rideType}</div>}
+                {filteredOrders.map((order) => {
+                  const propName = order.items?.[0]?.property || order.propertyName || 'General Inquiry';
+                  return (
+                    <tr key={order._id} className="hover:bg-slate-50/70 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-gray-900">{order.orderNumber}</div>
+                        <div className="mt-1.5">{getTypeBadge(order.type)}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-semibold text-gray-900">{order.customer?.name || 'Anonymous Lead'}</div>
+                        <div className="text-xs text-gray-500">{order.customer?.email || 'No email provided'}</div>
+                        {order.customer?.phone && (
+                          <a
+                            href={`tel:${order.customer.phone}`}
+                            className="inline-flex items-center gap-1 text-xs text-brand-teal font-medium mt-1 hover:underline"
+                          >
+                            📞 {order.customer.phone}
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 font-medium line-clamp-2">
+                          {propName}
                         </div>
-                      )}
-                      {order.type === 'call_back' && (
-                        <div className="text-xs text-emerald-600 font-medium">Immediate callback requested</div>
-                      )}
-                      {order.type === 'order' && (
-                        <div className="text-xs text-gray-500">Standard Booking</div>
-                      )}
-                      {order.notes && <div className="text-[10px] text-gray-400 mt-1 line-clamp-1 italic">"{order.notes}"</div>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-[10px] font-bold rounded-full ${getStatusBadge(
-                          order.status
-                        )}`}
-                      >
-                        {order.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          alert(`Details for ${order.orderNumber}:\n${JSON.stringify({
-                            customer: order.customer,
-                            metadata: order.metadata,
-                            notes: order.notes
-                          }, null, 2)}`);
-                        }}
-                        className="text-brand-red hover:text-brand-red-dark bg-brand-red/10 px-3 py-1 rounded-lg"
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4">
+                        {(order.type === 'site_visit' || order.type === 'presentation') && order.metadata && (
+                          <div className="text-xs">
+                            <div className="font-semibold text-gray-800">
+                              {order.type === 'site_visit' ? 'Site Visit' : 'Online Demo'}
+                            </div>
+                            {(order.metadata.visitDate || order.metadata.date) && (
+                              <div className="text-gray-600 mt-0.5">
+                                📅 {new Date(order.metadata.visitDate || order.metadata.date || '').toLocaleString()}
+                              </div>
+                            )}
+                            {order.metadata.rideType && (
+                              <span className="inline-block mt-1 text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
+                                Ride: {String(order.metadata.rideType)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {order.type === 'call_back' && (
+                          <div className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Immediate callback requested
+                          </div>
+                        )}
+                        {order.type === 'order' && (
+                          <div className="text-xs text-indigo-700 font-medium">Standard Booking</div>
+                        )}
+                        {order.notes && (
+                          <div className="text-xs text-gray-500 mt-1 line-clamp-1 italic">
+                            "{order.notes}"
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${getStatusBadge(
+                            order.status
+                          )}`}
+                        >
+                          {order.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="inline-flex items-center gap-1 text-white bg-slate-900 hover:bg-brand-red px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition active:scale-95"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Elegant Details Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center font-bold text-lg">
+                  📋
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Enquiry #{selectedOrder.orderNumber}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Received on {new Date(selectedOrder.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Status & Type Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200/70">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">Request Type:</span>
+                  {getTypeBadge(selectedOrder.type)}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">Status:</span>
+                  <select
+                    value={selectedOrder.status}
+                    disabled={statusUpdating}
+                    onChange={(e) => updateOrderStatus(selectedOrder._id, e.target.value)}
+                    className="text-xs font-semibold border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-brand-red"
+                  >
+                    <option value="pending">PENDING</option>
+                    <option value="confirmed">CONFIRMED</option>
+                    <option value="processing">PROCESSING</option>
+                    <option value="delivered">DELIVERED / RESOLVED</option>
+                    <option value="cancelled">CANCELLED</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Customer Information Card */}
+              <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+                  Customer Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-500">Full Name</label>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {selectedOrder.customer?.name || 'Not provided'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Email Address</label>
+                    <div className="text-sm font-semibold text-gray-900 break-all">
+                      {selectedOrder.customer?.email ? (
+                        <a href={`mailto:${selectedOrder.customer.email}`} className="text-brand-red hover:underline">
+                          {selectedOrder.customer.email}
+                        </a>
+                      ) : (
+                        'Not provided'
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Phone Number</label>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {selectedOrder.customer?.phone ? (
+                        <a href={`tel:${selectedOrder.customer.phone}`} className="text-brand-teal hover:underline flex items-center gap-1">
+                          📞 {selectedOrder.customer.phone}
+                        </a>
+                      ) : (
+                        'Not provided'
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Details */}
+              <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+                  Property Concerned
+                </h3>
+                <div className="text-base font-semibold text-gray-900">
+                  {selectedOrder.items?.[0]?.property || selectedOrder.propertyName || 'General Inquiry'}
+                </div>
+                {selectedOrder.items?.[0]?.price ? (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Listed Price: ₹{selectedOrder.items[0].price.toLocaleString()}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Visit / Demo Details (if applicable) */}
+              {selectedOrder.metadata && Object.keys(selectedOrder.metadata).length > 0 && (
+                <div className="bg-amber-50/60 rounded-xl p-5 border border-amber-200/80">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-3">
+                    Appointment & Booking Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    {(selectedOrder.metadata.visitDate || selectedOrder.metadata.date) && (
+                      <div>
+                        <span className="text-xs text-amber-800 block">Requested Date & Time</span>
+                        <span className="font-semibold text-amber-950">
+                          {new Date(String(selectedOrder.metadata.visitDate || selectedOrder.metadata.date)).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {selectedOrder.metadata.rideType && (
+                      <div>
+                        <span className="text-xs text-amber-800 block">Ride Preference</span>
+                        <span className="font-semibold text-amber-950">
+                          {String(selectedOrder.metadata.rideType)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes / Message */}
+              {(selectedOrder.notes || selectedOrder.message || selectedOrder.subject) && (
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                    Customer Message & Notes
+                  </h3>
+                  {selectedOrder.subject && (
+                    <div className="text-xs font-semibold text-gray-700 mb-1">
+                      Subject: {selectedOrder.subject}
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {selectedOrder.message || selectedOrder.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-xs text-gray-500">
+                Update status dropdown above to keep leads organized.
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

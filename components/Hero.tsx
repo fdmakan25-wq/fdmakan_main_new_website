@@ -169,9 +169,9 @@ export default function Hero() {
   const currentBanner = banners[currentSlide] || banners[0];
 
   return (
-    <section ref={sectionRef} id="hero-section" className="relative h-[165vh] bg-[#111827]">
+    <section ref={sectionRef} id="hero-section" className="relative min-h-screen lg:h-[165vh] bg-[#111827]">
       <div
-        className="sticky top-0 h-screen w-full overflow-hidden will-change-transform transition-[border-radius,margin,width] duration-150 ease-out"
+        className="relative lg:sticky top-0 min-h-screen lg:h-screen w-full overflow-hidden will-change-transform transition-[border-radius,margin,width] duration-150 ease-out"
         style={{
           transform: `translateY(${lift}px) scale(${scale})`,
           transformOrigin: 'center top',
@@ -195,35 +195,35 @@ export default function Hero() {
             sizes="100vw"
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30" />
 
         {/* Hero content */}
-        <div className="relative z-10 h-full flex flex-col container mx-auto px-6 md:px-10 max-w-7xl pt-20 pb-6 md:pb-8">
+        <div className="relative z-10 min-h-screen lg:h-full flex flex-col justify-between container mx-auto px-4 sm:px-6 md:px-10 max-w-7xl pt-28 sm:pt-32 pb-8 md:pb-10">
           {/* Main headline block */}
           <div className="flex-1 flex flex-col justify-center min-h-0 py-4 md:py-6">
-            <div className="max-w-2xl">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-semibold uppercase tracking-widest mb-5 backdrop-blur-sm">
+            <div className="max-w-2xl py-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-3 sm:mb-5 backdrop-blur-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent-orange animate-pulse" />
                 Seal The Deal • Premium Real Estate
               </span>
 
               <h1
                 key={`title-${currentSlide}`}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.08] mb-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-3 sm:mb-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
               >
                 {currentBanner.title}
               </h1>
 
               <p
                 key={`subtitle-${currentSlide}`}
-                className="text-white/75 text-base md:text-lg leading-relaxed mb-7 max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100"
+                className="text-white/80 text-sm sm:text-base md:text-lg leading-relaxed mb-5 sm:mb-7 max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100"
               >
                 {currentBanner.subtitle}
               </p>
 
               {banners.length > 1 && (
-                <div className="flex items-center gap-2 mb-6">
+                <div className="flex items-center gap-2 mb-5">
                   {banners.map((_, index) => (
                     <button
                       key={index}
@@ -241,18 +241,18 @@ export default function Hero() {
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
                 <Link
                   href="/properties"
-                  className="bg-accent-orange text-white px-8 py-3.5 rounded-full font-bold hover:bg-accent-orange/90 transition shadow-lg hover:shadow-accent hover:-translate-y-0.5"
+                  className="bg-accent-orange text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-accent-orange/90 transition shadow-lg hover:shadow-accent text-center active:scale-95"
                 >
                   Explore Properties
                 </Link>
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-white border border-white/40 hover:bg-white/10 transition backdrop-blur-sm"
+                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold text-white border border-white/40 hover:bg-white/10 transition backdrop-blur-sm text-center active:scale-95"
                 >
-                  Contact Us
+                  <span>Contact Us</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -262,138 +262,139 @@ export default function Hero() {
           </div>
 
           {/* Stats + filter — stacked, never overlapping */}
-          <div className="shrink-0 space-y-5 md:space-y-6">
-            <div className="flex flex-wrap gap-6 sm:gap-10 md:gap-14 hero-text-delay-3">
+          <div className="shrink-0 space-y-4 md:space-y-6 pt-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 max-w-lg">
               {[
                 { value: '500+', label: 'Properties' },
                 { value: '50+', label: 'Developers' },
                 { value: '10K+', label: 'Happy Clients' },
               ].map((stat) => (
-                <div key={stat.label}>
-                  <p className="text-2xl md:text-3xl font-extrabold text-white">{stat.value}</p>
-                  <p className="text-[11px] md:text-xs text-white/50 uppercase tracking-widest font-semibold mt-0.5">{stat.label}</p>
+                <div key={stat.label} className="bg-white/5 backdrop-blur-sm sm:bg-transparent p-2 sm:p-0 rounded-xl text-center sm:text-left border border-white/10 sm:border-0">
+                  <p className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-tight">{stat.value}</p>
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider font-semibold mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>
 
+
             {/* Search / filter bar */}
             <div className="w-full">
-              <div className="bg-gradient-to-r from-brand-red via-brand-red-light to-brand-red rounded-2xl shadow-2xl p-4 md:p-6 border border-white/20 backdrop-blur-md">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
-              <div className="relative">
-                <label className="text-xs font-semibold text-white mb-2 flex items-center">
-                  <svg className="w-4 h-4 mr-1.5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Search by Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Properties, Developers..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleFindNow()}
-                  className="w-full px-4 py-3 border-2 border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-gray-900 bg-white font-medium text-sm"
-                />
-                {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl z-50 overflow-hidden">
-                    {searchResults.map((result) => (
-                      <button
-                        key={`${result.type}-${result.id}`}
-                        type="button"
-                        onClick={() => {
-                          window.location.href = result.type === 'property'
-                            ? `/view-details/${result.id}`
-                            : `/developers/${result.id}`;
-                        }}
-                        className="w-full flex items-center px-4 py-3 hover:bg-gray-50 transition border-b border-gray-50 last:border-0 text-left"
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${result.type === 'property' ? 'bg-brand-red/10 text-brand-red' : 'bg-brand-teal/10 text-brand-teal'}`}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-gray-900 truncate">{result.name}</div>
-                          <div className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">{result.type}</div>
-                        </div>
-                      </button>
-                    ))}
+              <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 border border-white/15">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+                  <div className="relative sm:col-span-2 lg:col-span-1">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-white/80 mb-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Search
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Project or Developer..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleFindNow()}
+                      className="w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 focus:bg-white focus:text-gray-900 text-white placeholder-white/50 border border-white/15 focus:border-accent-orange focus:outline-none transition-all duration-200 text-sm font-medium"
+                    />
+                    {searchResults.length > 0 && (
+                      <div className="absolute top-full left-0 mt-2 w-full min-w-[260px] bg-white border border-gray-100 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-gray-100">
+                        {searchResults.map((result) => (
+                          <button
+                            key={`${result.type}-${result.id}`}
+                            type="button"
+                            onClick={() => {
+                              window.location.href = result.type === 'property'
+                                ? `/view-details/${result.id}`
+                                : `/developers/${result.id}`;
+                            }}
+                            className="w-full flex items-center px-4 py-3 hover:bg-gray-50 transition text-left"
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 shrink-0 ${result.type === 'property' ? 'bg-brand-red/10 text-brand-red' : 'bg-brand-teal/10 text-brand-teal'}`}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              </svg>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-bold text-gray-900 truncate">{result.name}</div>
+                              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">{result.type}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div>
-                <label className="text-xs font-semibold text-white mb-2 flex items-center">
-                  <svg className="w-4 h-4 mr-1.5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  Choose Area
-                </label>
-                <select
-                  value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white text-gray-900 bg-white font-medium text-sm appearance-none"
-                >
-                  <option value="">Select Area</option>
-                  {locations.map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
-              </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-white/80 mb-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      Location
+                    </label>
+                    <select
+                      value={selectedArea}
+                      onChange={(e) => setSelectedArea(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 focus:bg-white focus:text-gray-900 text-white border border-white/15 focus:border-accent-orange focus:outline-none transition-all duration-200 text-sm font-medium appearance-none cursor-pointer"
+                    >
+                      <option value="" className="text-gray-900 bg-white">All Locations</option>
+                      {locations.map((loc) => (
+                        <option key={loc} value={loc} className="text-gray-900 bg-white">{loc}</option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="text-xs font-semibold text-white mb-2 flex items-center">
-                  <svg className="w-4 h-4 mr-1.5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Property Status
-                </label>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white text-gray-900 bg-white font-medium text-sm appearance-none"
-                >
-                  <option value="">All Properties</option>
-                  <option value="newly-launched">Newly Launched</option>
-                  <option value="top-selling">Top Selling</option>
-                  <option value="top-picks">Top Picks</option>
-                  <option value="premium">Premium Projects</option>
-                </select>
-              </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-white/80 mb-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Status
+                    </label>
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 focus:bg-white focus:text-gray-900 text-white border border-white/15 focus:border-accent-orange focus:outline-none transition-all duration-200 text-sm font-medium appearance-none cursor-pointer"
+                    >
+                      <option value="" className="text-gray-900 bg-white">All Status</option>
+                      <option value="newly-launched" className="text-gray-900 bg-white">Newly Launched</option>
+                      <option value="top-selling" className="text-gray-900 bg-white">Top Selling</option>
+                      <option value="top-picks" className="text-gray-900 bg-white">Top Picks</option>
+                      <option value="premium" className="text-gray-900 bg-white">Premium Projects</option>
+                    </select>
+                  </div>
 
-              <div>
-                <label className="text-xs font-semibold text-white mb-2 flex items-center">
-                  <svg className="w-4 h-4 mr-1.5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  Property Type
-                </label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white text-gray-900 bg-white font-medium text-sm appearance-none"
-                >
-                  <option value="">Select Type</option>
-                  <option value="1rk">1 RK</option>
-                  <option value="1bhk">1 BHK</option>
-                  <option value="2bhk">2 BHK</option>
-                  <option value="3bhk">3 BHK</option>
-                </select>
-              </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-white/80 mb-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      Typology
+                    </label>
+                    <select
+                      value={selectedType}
+                      onChange={(e) => setSelectedType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 focus:bg-white focus:text-gray-900 text-white border border-white/15 focus:border-accent-orange focus:outline-none transition-all duration-200 text-sm font-medium appearance-none cursor-pointer"
+                    >
+                      <option value="" className="text-gray-900 bg-white">Any Typology</option>
+                      <option value="1rk" className="text-gray-900 bg-white">1 RK</option>
+                      <option value="1bhk" className="text-gray-900 bg-white">1 BHK</option>
+                      <option value="2bhk" className="text-gray-900 bg-white">2 BHK</option>
+                      <option value="3bhk" className="text-gray-900 bg-white">3 BHK</option>
+                    </select>
+                  </div>
 
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={handleFindNow}
-                  className="w-full bg-white text-brand-red px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition shadow-xl flex items-center justify-center gap-2 uppercase tracking-wide"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Find Now
-                </button>
-              </div>
+                  <div className="flex items-end sm:col-span-2 lg:col-span-1">
+                    <button
+                      type="button"
+                      onClick={handleFindNow}
+                      className="w-full bg-gradient-to-r from-accent-orange to-brand-red text-white hover:from-brand-red hover:to-brand-red-dark py-3.5 px-6 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg hover:shadow-accent flex items-center justify-center gap-2 uppercase tracking-wider group"
+                    >
+                      <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Find Now
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

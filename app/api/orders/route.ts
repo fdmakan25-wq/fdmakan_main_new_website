@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { sendEnquiryEmail, EnquiryType } from '@/lib/send-enquiry-email';
+import { EnquiryInputSchema } from '@/lib/validations';
 
 function getOrderPrefix(type: string) {
   if (type === 'call_back') return 'CB';
@@ -39,14 +40,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const db = await getDatabase();
-    const data = await request.json();
+    const rawData = await request.json();
 
-    if (!data.type || !data.customer) {
+    const parseResult = EnquiryInputSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.issues[0]?.message || 'Invalid enquiry data';
       return NextResponse.json(
-        { error: 'Invalid data', message: 'Type and customer details are required' },
+        { 
+          error: firstError, 
+          message: firstError,
+          details: parseResult.error.issues.map(i => ({ path: i.path.join('.'), message: i.message }))
+        },
         { status: 400 }
       );
     }
+
+    const data = parseResult.data;
 
     const prefix = getOrderPrefix(data.type);
     const randomNum = Math.floor(1000 + Math.random() * 9000);

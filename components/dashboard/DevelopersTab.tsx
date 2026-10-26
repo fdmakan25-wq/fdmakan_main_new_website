@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ToastProvider';
 
 interface Developer {
   _id: string;
@@ -54,6 +55,8 @@ export default function DevelopersTab() {
     setShowModal(true);
   };
 
+  const toast = useToast();
+
   const handleDeleteDeveloper = async (id: string) => {
     if (!confirm('Are you sure you want to delete this developer?')) {
       return;
@@ -66,11 +69,11 @@ export default function DevelopersTab() {
 
       if (!response.ok) throw new Error('Failed to delete developer');
 
-      alert('Developer deleted successfully!');
+      toast.success('Developer deleted successfully!');
       fetchDevelopers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting developer:', error);
-      alert('Failed to delete developer');
+      toast.error(error.message || 'Failed to delete developer');
     }
   };
 
@@ -221,6 +224,39 @@ function DeveloperFormModal({
     rating: developer?.rating || 5,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const toast = useToast();
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      uploadData.append('folder', 'fdmakan/developers');
+
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: uploadData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || err.error || 'Failed to upload logo');
+      }
+
+      const data = await response.json();
+      setFormData((prev) => ({ ...prev, logo: data.url }));
+      toast.success('Logo uploaded successfully!');
+    } catch (error: any) {
+      console.error('Error uploading logo:', error);
+      toast.error(error.message || 'Failed to upload logo');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,14 +279,14 @@ function DeveloperFormModal({
         throw new Error(error.message || 'Failed to save developer');
       }
 
-      alert(developer ? 'Developer updated successfully!' : 'Developer created successfully!');
+      toast.success(developer ? 'Developer updated successfully!' : 'Developer created successfully!');
       // Small delay to ensure database is updated
       setTimeout(() => {
         onSuccess();
       }, 100);
     } catch (error: any) {
       console.error('Error saving developer:', error);
-      alert(error.message || 'Failed to save developer');
+      toast.error(error.message || 'Failed to save developer');
     } finally {
       setSubmitting(false);
     }
@@ -288,8 +324,28 @@ function DeveloperFormModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Logo URL (Optional)
+              Developer Logo (Upload from Local Device or Paste URL)
             </label>
+            
+            {/* Upload from Local Device */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-2">
+              <label className="relative flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-medium rounded-lg border border-slate-300 cursor-pointer transition shadow-sm active:scale-[0.98]">
+                <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span>{uploadingLogo ? 'Uploading...' : 'Choose File from Computer'}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  disabled={uploadingLogo}
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+              </label>
+
+              <span className="text-xs text-gray-400 self-center">or enter URL directly:</span>
+            </div>
+
             <input
               type="url"
               value={formData.logo}
@@ -297,9 +353,20 @@ function DeveloperFormModal({
               placeholder="https://example.com/logo.png"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white"
             />
+
+            {uploadingLogo && (
+              <div className="flex items-center gap-2 text-xs text-brand-red mt-1.5 animate-pulse">
+                <svg className="animate-spin h-3.5 w-3.5 text-brand-red" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Uploading logo to Cloudinary...
+              </div>
+            )}
+
             {formData.logo && (
-              <div className="mt-2">
-                <div className="w-full h-24 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center p-4">
+              <div className="mt-3 relative inline-block group">
+                <div className="w-32 h-24 bg-slate-50 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center p-2 relative overflow-hidden">
                   <img
                     src={formData.logo}
                     alt="Logo preview"
@@ -309,6 +376,16 @@ function DeveloperFormModal({
                     }}
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, logo: '' })}
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 text-xs shadow-md transition"
+                  title="Remove logo"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             )}
           </div>
