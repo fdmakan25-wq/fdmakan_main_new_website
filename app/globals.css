@@ -68,7 +68,8 @@
     font-weight: 600;
   }
 
-  h5, h6 {
+  h5,
+  h6 {
     color: var(--foreground);
     font-size: 1.25rem;
     line-height: 1.4;
@@ -133,13 +134,15 @@
     font-weight: 400;
   }
 
-  strong, b {
+  strong,
+  b {
     color: var(--foreground);
     font-weight: 700;
   }
 }
 
 @layer components {
+
   /* Section eyebrow — matches reference "ABOUT OUR COMPANY" */
   .type-section-label {
     @apply text-label-sm uppercase text-accent-orange font-bold tracking-widest;
@@ -224,6 +227,7 @@ body {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -241,12 +245,15 @@ body {
 
 /* Scrollbar Hide Utility for Cards, Sidebars & Modals */
 .scrollbar-hide {
-  -ms-overflow-style: none !important; /* IE and Edge */
-  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+  scrollbar-width: none !important;
+  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none !important; /* Chrome, Safari, Opera */
+  display: none !important;
+  /* Chrome, Safari, Opera */
   width: 0 !important;
   height: 0 !important;
 }
@@ -256,9 +263,11 @@ body {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -274,6 +283,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -288,6 +298,7 @@ body {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -393,6 +404,7 @@ select {
     opacity: 0;
     transform: translateX(50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -404,6 +416,7 @@ select {
     opacity: 0;
     transform: translateX(-50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -423,13 +436,16 @@ select {
     opacity: 0;
     transform: translateX(-200px) translateY(-50%);
   }
+
   60% {
     opacity: 1;
     transform: translateX(15px) translateY(-50%);
   }
+
   80% {
     transform: translateX(-8px) translateY(-50%);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0) translateY(-50%);
@@ -439,4 +455,3 @@ select {
 .sidebar-slide-in {
   animation: slideInFromLeftBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
-
