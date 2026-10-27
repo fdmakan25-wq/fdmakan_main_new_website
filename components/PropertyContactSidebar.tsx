@@ -9,31 +9,58 @@ interface PropertyContactSidebarProps {
 }
 
 export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban Woods" }: PropertyContactSidebarProps) {
-    const [visitDate, setVisitDate] = useState('2026-09-01T15:09');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [visitDate, setVisitDate] = useState(() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(11, 0, 0, 0);
+        return tomorrow.toISOString().slice(0, 16);
+    });
     const [rideType, setRideType] = useState('OLA');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [activeTab, setActiveTab] = useState<'site_visit' | 'presentation'>('site_visit');
 
     const handleInquirySubmit = async (type: 'site_visit' | 'presentation') => {
-        setLoading(true);
         setMessage(null);
+
+        // Client-side validations
+        if (!name.trim()) {
+            setMessage({ type: 'error', text: 'Please enter your full name.' });
+            return;
+        }
+
+        const cleanedPhone = phone.trim();
+        if (!cleanedPhone || cleanedPhone.replace(/\D/g, '').length < 10) {
+            setMessage({ type: 'error', text: 'Please enter a valid 10-digit mobile number.' });
+            return;
+        }
+
+        if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+            setMessage({ type: 'error', text: 'Please enter a valid email address.' });
+            return;
+        }
+
+        setLoading(true);
 
         try {
             const body = {
                 type: type,
                 customer: {
-                    name: 'Website Lead',
-                    email: '',
-                    phone: '',
+                    name: name.trim(),
+                    email: email.trim(),
+                    phone: cleanedPhone,
                 },
+                propertyName,
                 items: [{ property: propertyName, quantity: 1, price: 0 }],
                 total: 0,
                 metadata: {
                     date: visitDate,
                     ...(type === 'site_visit' && { rideType })
                 },
-                notes: `${type === 'site_visit' ? 'Site visit' : 'Online presentation'} requested for ${propertyName}. Date: ${visitDate}${type === 'site_visit' ? `, Ride: ${rideType}` : ''}`
+                notes: `${type === 'site_visit' ? 'Site visit' : 'Online presentation'} requested for ${propertyName}. Preferred Date: ${visitDate}${type === 'site_visit' ? `, Ride: ${rideType}` : ''}`
             };
 
             const response = await fetch('/api/orders', {
@@ -43,16 +70,26 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Failed to submit');
+            if (!response.ok) {
+                throw new Error(data.message || data.error || 'Failed to submit enquiry');
+            }
 
             setMessage({
                 type: 'success',
                 text: data.emailSent === false
                     ? 'Enquiry saved! Our team will contact you soon.'
-                    : type === 'site_visit' ? 'Site visit enquiry sent!' : 'Presentation enquiry sent!'
+                    : type === 'site_visit' ? 'Site visit booked successfully! Confirmation sent.' : 'Presentation appointment booked successfully!'
             });
-        } catch {
-            setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+
+            // Reset form fields
+            setName('');
+            setEmail('');
+            setPhone('');
+        } catch (err: any) {
+            setMessage({
+                type: 'error',
+                text: err?.message || 'Something went wrong. Please try again.'
+            });
         } finally {
             setLoading(false);
         }
@@ -75,6 +112,7 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
             <div className="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden">
                 <div className="flex bg-gray-50 p-1.5 m-3 mb-0 rounded-xl">
                     <button
+                        type="button"
                         onClick={() => setActiveTab('site_visit')}
                         className={`flex-1 py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                             activeTab === 'site_visit' ? 'bg-white text-navy-blue shadow-sm' : 'text-gray-500 hover:text-gray-700'
@@ -84,6 +122,7 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                         Site Visit
                     </button>
                     <button
+                        type="button"
                         onClick={() => setActiveTab('presentation')}
                         className={`flex-1 py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                             activeTab === 'presentation' ? 'bg-white text-navy-blue shadow-sm' : 'text-gray-500 hover:text-gray-700'
@@ -105,6 +144,46 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                         </div>
                     </div>
 
+                    {/* Contact Details Fields */}
+                    <div className="space-y-2 pt-1 border-t border-gray-100">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Your Contact Details</p>
+
+                        <div>
+                            <input
+                                type="text"
+                                placeholder="Your Full Name *"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal"
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                                🇮🇳 +91
+                            </span>
+                            <input
+                                type="tel"
+                                placeholder="Mobile Number *"
+                                required
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                className="w-full pl-14 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal"
+                            />
+                        </div>
+
+                        <div>
+                            <input
+                                type="email"
+                                placeholder="Email Address (Optional)"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal"
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
                             <CalendarIcon className="w-3 h-3 text-brand-teal" />
@@ -112,7 +191,7 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                         </label>
                         <input
                             type="datetime-local"
-                            className="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal"
+                            className="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-brand-teal/30 focus:border-brand-teal"
                             value={visitDate}
                             onChange={(e) => setVisitDate(e.target.value)}
                         />
@@ -176,6 +255,7 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                     )}
 
                     <button
+                        type="button"
                         onClick={() => handleInquirySubmit(activeTab)}
                         disabled={loading}
                         className={`w-full bg-navy-blue text-white font-bold py-2.5 rounded-xl text-sm hover:bg-[#1e4a7a] transition shadow-sm flex items-center justify-center gap-2 ${loading ? 'opacity-70' : ''}`}

@@ -239,29 +239,16 @@ body {
   opacity: 0;
 }
 
-/* Globally Hide Scrollbar while keeping full scrolling capability */
-html, body {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-  width: 0;
-  height: 0;
-}
-
-/* Scrollbar Hide Utility */
+/* Scrollbar Hide Utility for Cards, Sidebars & Modals */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Gradient Text Animation */

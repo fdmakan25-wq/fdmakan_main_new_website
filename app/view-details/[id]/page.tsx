@@ -312,7 +312,7 @@ export default function PropertyDetailsPage() {
 
           {/* LEFT SIDEBAR - Sticky */}
           <div className="hidden xl:block w-[260px] 2xl:w-[280px] flex-shrink-0">
-            <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain">
+            <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain scrollbar-hide">
               <PropertyStatsSidebar />
             </div>
           </div>
@@ -948,7 +948,7 @@ export default function PropertyDetailsPage() {
 
           {/* RIGHT SIDEBAR - Sticky */}
           <div className="hidden lg:block w-[320px] xl:w-[340px] 2xl:w-[360px] flex-shrink-0">
-            <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain">
+            <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain scrollbar-hide">
               <PropertyContactSidebar propertyName={property.name} />
             </div>
           </div>
