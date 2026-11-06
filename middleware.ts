@@ -4,15 +4,19 @@ import { verifyAdminSession, ADMIN_COOKIE_NAME } from '@/lib/auth';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Protect /dashboard and /admin/dashboard routes
-  if (pathname.startsWith('/dashboard')) {
+  // Protect /dashboard and /admin routes (except /admin/login)
+  if (pathname.startsWith('/dashboard') || pathname === '/admin' || (pathname.startsWith('/admin') && pathname !== '/admin/login')) {
     const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const session = token ? await verifyAdminSession(token) : null;
 
     if (!session) {
       const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      loginUrl.searchParams.set('redirect', pathname === '/admin' ? '/dashboard' : pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    if (pathname === '/admin') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
 
@@ -53,8 +57,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/admin/:path*',
     '/dashboard/:path*',
-    '/admin/login',
     '/api/:path*',
   ],
 };

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import SafeImage from '@/components/SafeImage';
 import { formatPropertyPrice } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
+import ScrollReveal from '@/components/ScrollReveal';
 
 interface LaunchProject {
   id: string;
@@ -119,124 +120,134 @@ export default function NewlyLaunchedProjects() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
             {/* Flagship Hero Card */}
             {featured && (
-              <div
-                onClick={() => {
-                  window.location.href = `/view-details/${featured.id}`;
-                }}
-                className="lg:col-span-7 group relative bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl hover:border-slate-500 cursor-pointer flex flex-col justify-between transition-all duration-300"
-              >
-                <div className="relative h-56 sm:h-72 md:h-80 w-full overflow-hidden">
-                  <SafeImage
-                    src={featured.image}
-                    alt={featured.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    sizes="(max-width: 1024px) 100vw, 60vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-transparent" />
-                  
-                  {/* Top tags */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-                    <span className="bg-brand-red text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-                      ★ Flagship Debut
-                    </span>
-                    <span className="bg-slate-900/85 backdrop-blur-md text-emerald-400 border border-emerald-500/30 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full">
-                      Bookings Open
-                    </span>
-                  </div>
+              <div className="lg:col-span-7">
+                <ScrollReveal animation="fade-left" duration={800} className="h-full">
+                  <div
+                    onClick={() => {
+                      window.location.href = `/view-details/${featured.id}`;
+                    }}
+                    className="group relative bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl hover:border-slate-500 cursor-pointer flex flex-col justify-between transition-all duration-300 h-full"
+                  >
+                    <div className="relative h-56 sm:h-72 md:h-80 w-full overflow-hidden">
+                      <SafeImage
+                        src={featured.image}
+                        alt={featured.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-transparent" />
+                      
+                      {/* Top tags */}
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
+                        <span className="bg-brand-red text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
+                          ★ Flagship Debut
+                        </span>
+                        <span className="bg-slate-900/85 backdrop-blur-md text-emerald-400 border border-emerald-500/30 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full">
+                          Bookings Open
+                        </span>
+                      </div>
 
-                  {/* Title & Developer inside image visual */}
-                  <div className="absolute bottom-3 left-4 right-4">
-                    <p className="text-brand-teal text-[11px] sm:text-xs font-semibold tracking-wide uppercase mb-0.5">
-                      {featured.developer}
-                    </p>
-                    <h3 className="text-white text-lg sm:text-2xl md:text-3xl font-black leading-tight group-hover:text-amber-300 transition-colors">
-                      {featured.name}
-                    </h3>
-                  </div>
-                </div>
+                      {/* Title & Developer inside image visual */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <p className="text-brand-teal text-[11px] sm:text-xs font-semibold tracking-wide uppercase mb-0.5">
+                          {featured.developer}
+                        </p>
+                        <h3 className="text-white text-lg sm:text-2xl md:text-3xl font-black leading-tight group-hover:text-amber-300 transition-colors">
+                          {featured.name}
+                        </h3>
+                      </div>
+                    </div>
 
-                {/* Bottom Spec Footer */}
-                <div className="p-4 sm:p-5 bg-slate-800/90 flex flex-wrap items-center justify-between gap-3 border-t border-slate-700/50">
-                  <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-300 min-w-0">
-                    <div className="flex items-center gap-1 truncate font-medium">
-                      <svg className="w-4 h-4 text-brand-teal shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                      <span className="truncate">{featured.location}</span>
-                    </div>
-                    <span className="text-slate-600">•</span>
-                    <span className="bg-slate-700/70 text-slate-200 px-2.5 py-0.5 rounded font-semibold text-xs shrink-0">
-                      {featured.typology}
-                    </span>
-                  </div>
+                    {/* Bottom Spec Footer */}
+                    <div className="p-4 sm:p-5 bg-slate-800/90 flex flex-wrap items-center justify-between gap-3 border-t border-slate-700/50">
+                      <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-300 min-w-0">
+                        <div className="flex items-center gap-1 truncate font-medium">
+                          <svg className="w-4 h-4 text-brand-teal shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          </svg>
+                          <span className="truncate">{featured.location}</span>
+                        </div>
+                        <span className="text-slate-600">•</span>
+                        <span className="bg-slate-700/70 text-slate-200 px-2.5 py-0.5 rounded font-semibold text-xs shrink-0">
+                          {featured.typology}
+                        </span>
+                      </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold leading-none">Starting At</span>
-                      <span className="text-lg sm:text-2xl font-black text-white">{featured.price}</span>
-                    </div>
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-sm group-hover:translate-x-1 transition-transform">
-                      →
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold leading-none">Starting At</span>
+                          <span className="text-lg sm:text-2xl font-black text-white">{featured.price}</span>
+                        </div>
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-sm group-hover:translate-x-1 transition-transform">
+                          →
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </ScrollReveal>
               </div>
             )}
 
             {/* Launch List Feed (Takes 5 cols on desktop, responsive stack on mobile) */}
             <div className="lg:col-span-5 flex flex-col gap-2.5 sm:gap-3">
               {listItems.map((item, idx) => (
-                <div
+                <ScrollReveal
                   key={item.id}
-                  onClick={() => {
-                    window.location.href = `/view-details/${item.id}`;
-                  }}
-                  className="group bg-slate-800/60 hover:bg-slate-800 rounded-xl p-3 border border-slate-700/60 hover:border-slate-500 transition-all duration-200 cursor-pointer flex gap-3 items-center"
+                  animation="fade-right"
+                  delay={idx * 90}
+                  duration={700}
                 >
-                  {/* Thumbnail */}
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-900">
-                    <SafeImage
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="100px"
-                    />
-                    <span className="absolute top-1 left-1 bg-black/70 backdrop-blur-sm text-[9px] font-bold text-white px-1.5 py-0.5 rounded">
-                      #{idx + 2}
-                    </span>
+                  <div
+                    onClick={() => {
+                      window.location.href = `/view-details/${item.id}`;
+                    }}
+                    className="group bg-slate-800/60 hover:bg-slate-800 rounded-xl p-3 border border-slate-700/60 hover:border-slate-500 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex gap-3 items-center"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-900">
+                      <SafeImage
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="100px"
+                      />
+                      <span className="absolute top-1 left-1 bg-black/70 backdrop-blur-sm text-[9px] font-bold text-white px-1.5 py-0.5 rounded">
+                        #{idx + 2}
+                      </span>
+                    </div>
+
+                    {/* Info details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className="text-[10px] uppercase font-bold text-brand-teal truncate">
+                          {item.developer}
+                        </span>
+                        <span className="text-[9px] font-semibold text-slate-300 bg-slate-700/60 px-1.5 py-0.5 rounded shrink-0">
+                          {item.typology}
+                        </span>
+                      </div>
+
+                      <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">
+                        {item.name}
+                      </h4>
+
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5 truncate">
+                        <span>📍 {item.location}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-700/50">
+                        <span className="text-xs sm:text-sm font-black text-amber-400">
+                          {item.price}
+                        </span>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 group-hover:text-white flex items-center gap-0.5">
+                          Details <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Info details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <span className="text-[10px] uppercase font-bold text-brand-teal truncate">
-                        {item.developer}
-                      </span>
-                      <span className="text-[9px] font-semibold text-slate-300 bg-slate-700/60 px-1.5 py-0.5 rounded shrink-0">
-                        {item.typology}
-                      </span>
-                    </div>
-
-                    <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">
-                      {item.name}
-                    </h4>
-
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5 truncate">
-                      <span>📍 {item.location}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-700/50">
-                      <span className="text-xs sm:text-sm font-black text-amber-400">
-                        {item.price}
-                      </span>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 group-hover:text-white flex items-center gap-0.5">
-                        Details <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                </ScrollReveal>
               ))}
             </div>
           </div>

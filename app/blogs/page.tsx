@@ -5,6 +5,7 @@ import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ScrollReveal from '@/components/ScrollReveal';
 
 interface Blog {
   _id: string;
@@ -42,10 +43,12 @@ export default function BlogsPage() {
 
       <section className="bg-gradient-to-br from-navy-blue via-[#1e4a7a] to-brand-teal text-white pt-28 pb-16">
         <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Blogs & Insights</h1>
-          <p className="text-lg text-white/80">
-            Latest real estate news, tips, and market insights from FD MAKAN
-          </p>
+          <ScrollReveal animation="fade-down" duration={750}>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white">Blogs & Insights</h1>
+            <p className="text-lg text-white/80">
+              Latest real estate news, tips, and market insights from FD MAKAN
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -60,41 +63,51 @@ export default function BlogsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {blogs.map((blog) => (
-                <Link
-                  key={blog._id}
-                  href={`/blogs/${blog._id}`}
-                  className="bg-white rounded-2xl shadow-soft overflow-hidden border border-gray-100 hover:shadow-soft-lg hover:border-brand-teal/20 transition-all duration-300 group"
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <SafeImage
-                      src={blog.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop'}
-                      alt={blog.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <div className="p-5">
-                    <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
-                      <span>{blog.date}</span>
-                      <span>•</span>
-                      <span>{blog.author}</span>
-                    </div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-brand-teal transition-colors line-clamp-2">
-                      {blog.title}
-                    </h2>
-                    <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">{blog.excerpt}</p>
-                    <span className="inline-flex items-center gap-1 mt-4 text-brand-teal font-semibold text-sm">
-                      Read More
-                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              ))}
+              {blogs.map((blog, index) => {
+                const animationType =
+                  index % 3 === 0 ? 'fade-left' : index % 3 === 1 ? 'zoom-in' : 'fade-right';
+                return (
+                  <ScrollReveal
+                    key={blog._id}
+                    animation={animationType}
+                    delay={(index % 3) * 120}
+                    duration={750}
+                  >
+                    <Link
+                      href={`/blogs/${blog._id}`}
+                      className="bg-white rounded-2xl shadow-soft overflow-hidden border border-gray-100 hover:shadow-soft-lg hover:border-brand-teal/20 hover:-translate-y-1.5 transition-all duration-300 group block h-full"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <SafeImage
+                          src={blog.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop'}
+                          alt={blog.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <div className="p-5">
+                        <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
+                          <span>{blog.date}</span>
+                          <span>•</span>
+                          <span>{blog.author}</span>
+                        </div>
+                        <h2 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-brand-teal transition-colors line-clamp-2">
+                          {blog.title}
+                        </h2>
+                        <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">{blog.excerpt}</p>
+                        <span className="inline-flex items-center gap-1 mt-4 text-brand-teal font-semibold text-sm">
+                          Read More
+                          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </span>
+                      </div>
+                    </Link>
+                  </ScrollReveal>
+                );
+              })}
             </div>
           )}
         </div>

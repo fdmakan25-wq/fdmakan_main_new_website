@@ -132,14 +132,17 @@ export default function AnalyticsTab() {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-navy-blue via-[#1e4a7a] to-brand-teal p-6 sm:p-8 text-white shadow-lg shadow-navy-blue/10">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold mb-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            Live System Overview
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-medium mb-3">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-white font-medium">Live System Overview</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             Welcome back to FD Makan Admin
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-slate-200 leading-relaxed">
+          <p className="mt-2 text-sm sm:text-base text-slate-100 leading-relaxed">
             Monitor real-time site visits, enquiries, properties, and builders across Mumbai and Navi Mumbai.
           </p>
         </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
 import { formatPropertyPrice } from '@/lib/property-details-display';
+import ScrollReveal from '@/components/ScrollReveal';
 
 interface TopPickProject {
   id: string;
@@ -213,96 +214,100 @@ export default function HousingTopPicks() {
     <section className="py-7 md:py-9 bg-gradient-to-b from-gray-50/60 to-white overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
         {/* Header with Title and Slider Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-3">
-          <div>
-            <span className="inline-block px-2.5 py-0.5 bg-brand-teal/10 text-brand-teal text-[11px] font-bold uppercase tracking-widest rounded-full mb-1.5">
-              Curated For You
-            </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-              FD MAKAN&apos;s <span className="text-brand-red">Top Picks</span>
-            </h2>
-            <p className="text-gray-500 mt-0.5 text-xs md:text-sm">
-              Handpicked premium projects — explore top living options with us.
-            </p>
-          </div>
+        <ScrollReveal animation="fade-down" duration={700}>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-3">
+            <div>
+              <span className="inline-block px-2.5 py-0.5 bg-brand-teal/10 text-brand-teal text-[11px] font-bold uppercase tracking-widest rounded-full mb-1.5">
+                Curated For You
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+                FD MAKAN&apos;s <span className="text-brand-red">Top Picks</span>
+              </h2>
+              <p className="text-gray-500 mt-0.5 text-xs md:text-sm">
+                Handpicked premium projects — explore top living options with us.
+              </p>
+            </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/properties"
-              className="hidden sm:inline-flex items-center gap-1.5 text-navy-blue font-bold hover:text-brand-teal transition text-xs mr-2"
-            >
-              View all
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/properties"
+                className="hidden sm:inline-flex items-center gap-1.5 text-navy-blue font-bold hover:text-brand-teal transition text-xs mr-2"
+              >
+                View all
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
 
-            {projects.length > visibleCount && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={prevSlide}
-                  className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-brand-red hover:text-white hover:border-brand-red text-gray-700 transition-all duration-200 cursor-pointer"
-                  aria-label="Previous Top Pick"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={nextSlide}
-                  className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-brand-red hover:text-white hover:border-brand-red text-gray-700 transition-all duration-200 cursor-pointer"
-                  aria-label="Next Top Pick"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            )}
+              {projects.length > visibleCount && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={prevSlide}
+                    className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-brand-red hover:text-white hover:border-brand-red text-gray-700 transition-all duration-200 cursor-pointer"
+                    aria-label="Previous Top Pick"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextSlide}
+                    className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-brand-red hover:text-white hover:border-brand-red text-gray-700 transition-all duration-200 cursor-pointer"
+                    aria-label="Next Top Pick"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {loading ? (
           <div className="flex justify-center py-10 text-gray-400">Loading top picks...</div>
         ) : (
-          <div className="relative">
-            {/* Slider Viewport */}
-            <div className="overflow-hidden py-1">
-              <div
-                className="flex transition-transform duration-500 ease-out"
-                style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
-              >
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="flex-shrink-0 px-2 sm:px-2.5"
-                    style={{ width: `${100 / visibleCount}%` }}
-                  >
-                    <TopPickCard project={project} inGrid={true} />
-                  </div>
-                ))}
+          <ScrollReveal animation="fade-up" delay={120} duration={800}>
+            <div className="relative">
+              {/* Slider Viewport */}
+              <div className="overflow-hidden py-1">
+                <div
+                  className="flex transition-transform duration-500 ease-out"
+                  style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
+                >
+                  {projects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex-shrink-0 px-2 sm:px-2.5"
+                      style={{ width: `${100 / visibleCount}%` }}
+                    >
+                      <TopPickCard project={project} inGrid={true} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Pagination Dots */}
-            {projects.length > visibleCount && (
-              <div className="flex items-center justify-center mt-5 space-x-1.5">
-                {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      idx === currentIndex ? 'w-6 bg-brand-red' : 'w-2 bg-gray-300 hover:bg-gray-400'
-                    }`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+              {/* Pagination Dots */}
+              {projects.length > visibleCount && (
+                <div className="flex items-center justify-center mt-5 space-x-1.5">
+                  {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentIndex ? 'w-6 bg-brand-red' : 'w-2 bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </ScrollReveal>
         )}
       </div>
     </section>

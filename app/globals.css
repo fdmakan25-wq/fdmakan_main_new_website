@@ -455,3 +455,19 @@ select {
 .sidebar-slide-in {
   animation: slideInFromLeftBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
+
+/* Smooth Scroll & Animations */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

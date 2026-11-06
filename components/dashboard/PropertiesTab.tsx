@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import Pagination from '@/components/dashboard/Pagination';
 import {
@@ -692,6 +692,12 @@ function PropertyFormModal({
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
   const [activePhotoTab, setActivePhotoTab] = useState(PHOTO_TABS[0]);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [isDraggingVideo, setIsDraggingVideo] = useState(false);
+  const imageDragCounter = useRef(0);
+  const videoDragCounter = useRef(0);
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
 
   const inputClass =
     'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-transparent text-gray-900 bg-white';
@@ -766,6 +772,114 @@ function PropertyFormModal({
       ...prev,
       images: prev.images.includes(url) ? prev.images : [...prev.images, url],
     }));
+  };
+
+  const handleImageFilesUpload = async (files: FileList | File[]) => {
+    const fileList = Array.from(files);
+    if (fileList.length === 0) return;
+
+    setUploadingImage(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of fileList) {
+        if (!file.type.startsWith('image/')) {
+          alert(`${file.name} is not a supported image file.`);
+          continue;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`${file.name} is too large. Maximum size is 10MB.`);
+          continue;
+        }
+
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+
+        const response = await fetch('/api/upload/image', {
+          method: 'POST',
+          body: uploadData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `Failed to upload ${file.name}`);
+        }
+
+        const data = await response.json();
+        newUrls.push(data.url);
+      }
+
+      if (newUrls.length > 0) {
+        if (isCategoryListing) {
+          newUrls.forEach((url) => addPhotoToCategory(url));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            images: [...prev.images, ...newUrls],
+          }));
+        }
+      }
+    } catch (error: unknown) {
+      console.error('Error uploading image:', error);
+      alert(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+      if (imageFileInputRef.current) {
+        imageFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleVideoFilesUpload = async (files: FileList | File[]) => {
+    const fileList = Array.from(files);
+    if (fileList.length === 0) return;
+
+    setUploadingVideo(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of fileList) {
+        if (!file.type.startsWith('video/')) {
+          alert(`${file.name} is not a supported video file.`);
+          continue;
+        }
+        if (file.size > 100 * 1024 * 1024) {
+          alert(`${file.name} is too large. Maximum size is 100MB.`);
+          continue;
+        }
+
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+
+        const response = await fetch('/api/upload/video', {
+          method: 'POST',
+          body: uploadData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `Failed to upload ${file.name}`);
+        }
+
+        const data = await response.json();
+        newUrls.push(data.url);
+      }
+
+      if (newUrls.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          videos: [...prev.videos, ...newUrls],
+        }));
+      }
+    } catch (error: unknown) {
+      console.error('Error uploading video:', error);
+      alert(error instanceof Error ? error.message : 'Failed to upload video');
+    } finally {
+      setUploadingVideo(false);
+      if (videoFileInputRef.current) {
+        videoFileInputRef.current.value = '';
+      }
+    }
   };
 
   useEffect(() => {
@@ -2038,73 +2152,108 @@ function PropertyFormModal({
                 : 'Add multiple images — upload one at a time or pick several files. The first image is the main cover photo.'}
             </p>
             <div className="space-y-2">
-              {/* File Upload */}
+              {/* File Upload with Drag & Drop */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Image File
+                  Upload Image Files
                 </label>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                  multiple
-                  onChange={async (e) => {
-                    const files = e.target.files;
-                    if (!files || files.length === 0) return;
-
-                    setUploadingImage(true);
-                    const newUrls: string[] = [];
-
-                    try {
-                      for (const file of Array.from(files)) {
-                        if (file.size > 10 * 1024 * 1024) {
-                          alert(`${file.name} is too large. Maximum size is 10MB.`);
-                          continue;
-                        }
-
-                        const uploadData = new FormData();
-                        uploadData.append('file', file);
-
-                        const response = await fetch('/api/upload/image', {
-                          method: 'POST',
-                          body: uploadData,
-                        });
-
-                        if (!response.ok) {
-                          const error = await response.json();
-                          throw new Error(error.error || `Failed to upload ${file.name}`);
-                        }
-
-                        const data = await response.json();
-                        newUrls.push(data.url);
-                      }
-
-                      if (newUrls.length > 0) {
-                        if (isCategoryListing) {
-                          newUrls.forEach((url) => addPhotoToCategory(url));
-                        } else {
-                          setFormData({
-                            ...formData,
-                            images: [...formData.images, ...newUrls],
-                          });
-                        }
-                      }
-                      e.target.value = '';
-                    } catch (error: unknown) {
-                      console.error('Error uploading image:', error);
-                      alert(error instanceof Error ? error.message : 'Failed to upload image');
-                    } finally {
-                      setUploadingImage(false);
+                <div
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    imageDragCounter.current += 1;
+                    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+                      setIsDraggingImage(true);
                     }
                   }}
-                  disabled={uploadingImage}
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                {uploadingImage && (
-                  <p className="text-xs text-brand-teal mt-1">Uploading image to Cloudinary...</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: JPEG, PNG, WebP, GIF (Max 10MB each). Select multiple files at once.
-                </p>
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    imageDragCounter.current -= 1;
+                    if (imageDragCounter.current <= 0) {
+                      imageDragCounter.current = 0;
+                      setIsDraggingImage(false);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    imageDragCounter.current = 0;
+                    setIsDraggingImage(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleImageFilesUpload(e.dataTransfer.files);
+                    }
+                  }}
+                  onClick={() => {
+                    if (!uploadingImage && imageFileInputRef.current) {
+                      imageFileInputRef.current.click();
+                    }
+                  }}
+                  className={`relative flex flex-col items-center justify-center p-6 sm:p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 select-none ${
+                    isDraggingImage
+                      ? 'border-brand-teal bg-brand-teal/10 scale-[1.01] shadow-lg ring-4 ring-brand-teal/20'
+                      : uploadingImage
+                        ? 'border-gray-300 bg-gray-50/80 cursor-not-allowed opacity-80'
+                        : 'border-gray-300 bg-gray-50/60 hover:bg-teal-50/30 hover:border-brand-teal hover:shadow-xs'
+                  }`}
+                >
+                  <input
+                    ref={imageFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    multiple
+                    disabled={uploadingImage}
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        handleImageFilesUpload(e.target.files);
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  {uploadingImage ? (
+                    <div className="flex flex-col items-center py-2 text-center">
+                      <div className="w-9 h-9 border-3 border-brand-teal border-t-transparent rounded-full animate-spin mb-2" />
+                      <p className="text-sm font-semibold text-brand-teal">Uploading images to Cloudinary...</p>
+                      <p className="text-xs text-gray-500 mt-1">Please wait a moment while your photos are processed</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-200 ${
+                          isDraggingImage
+                            ? 'bg-brand-teal text-white scale-110 shadow-md'
+                            : 'bg-brand-teal/10 text-brand-teal'
+                        }`}
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700 text-center">
+                        {isDraggingImage ? (
+                          <span className="text-brand-teal font-semibold text-base">Drop images here to upload</span>
+                        ) : (
+                          <>
+                            <span className="text-brand-teal font-semibold hover:underline">Click to upload</span> or drag and drop images here
+                          </>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        Supported: JPEG, PNG, WebP, GIF (Max 10MB each) • Select or drop multiple photos at once
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* URL Input */}
@@ -2193,68 +2342,108 @@ function PropertyFormModal({
               Add property walkthrough or promo videos. Visitors can switch between photos and videos on the details page.
             </p>
             <div className="space-y-2">
+              {/* File Upload with Drag & Drop */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Upload Video File
                 </label>
-                <input
-                  type="file"
-                  accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
-                  multiple
-                  onChange={async (e) => {
-                    const files = e.target.files;
-                    if (!files || files.length === 0) return;
-
-                    setUploadingVideo(true);
-                    const newUrls: string[] = [];
-
-                    try {
-                      for (const file of Array.from(files)) {
-                        if (file.size > 100 * 1024 * 1024) {
-                          alert(`${file.name} is too large. Maximum size is 100MB.`);
-                          continue;
-                        }
-
-                        const uploadData = new FormData();
-                        uploadData.append('file', file);
-
-                        const response = await fetch('/api/upload/video', {
-                          method: 'POST',
-                          body: uploadData,
-                        });
-
-                        if (!response.ok) {
-                          const error = await response.json();
-                          throw new Error(error.error || `Failed to upload ${file.name}`);
-                        }
-
-                        const data = await response.json();
-                        newUrls.push(data.url);
-                      }
-
-                      if (newUrls.length > 0) {
-                        setFormData({
-                          ...formData,
-                          videos: [...formData.videos, ...newUrls],
-                        });
-                      }
-                      e.target.value = '';
-                    } catch (error: unknown) {
-                      console.error('Error uploading video:', error);
-                      alert(error instanceof Error ? error.message : 'Failed to upload video');
-                    } finally {
-                      setUploadingVideo(false);
+                <div
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    videoDragCounter.current += 1;
+                    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+                      setIsDraggingVideo(true);
                     }
                   }}
-                  disabled={uploadingVideo}
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                {uploadingVideo && (
-                  <p className="text-xs text-brand-teal mt-1">Uploading video to Cloudinary...</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: MP4, WebM, MOV, AVI (Max 100MB each)
-                </p>
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    videoDragCounter.current -= 1;
+                    if (videoDragCounter.current <= 0) {
+                      videoDragCounter.current = 0;
+                      setIsDraggingVideo(false);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    videoDragCounter.current = 0;
+                    setIsDraggingVideo(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleVideoFilesUpload(e.dataTransfer.files);
+                    }
+                  }}
+                  onClick={() => {
+                    if (!uploadingVideo && videoFileInputRef.current) {
+                      videoFileInputRef.current.click();
+                    }
+                  }}
+                  className={`relative flex flex-col items-center justify-center p-6 sm:p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 select-none ${
+                    isDraggingVideo
+                      ? 'border-brand-teal bg-brand-teal/10 scale-[1.01] shadow-lg ring-4 ring-brand-teal/20'
+                      : uploadingVideo
+                        ? 'border-gray-300 bg-gray-50/80 cursor-not-allowed opacity-80'
+                        : 'border-gray-300 bg-gray-50/60 hover:bg-teal-50/30 hover:border-brand-teal hover:shadow-xs'
+                  }`}
+                >
+                  <input
+                    ref={videoFileInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                    multiple
+                    disabled={uploadingVideo}
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        handleVideoFilesUpload(e.target.files);
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  {uploadingVideo ? (
+                    <div className="flex flex-col items-center py-2 text-center">
+                      <div className="w-9 h-9 border-3 border-brand-teal border-t-transparent rounded-full animate-spin mb-2" />
+                      <p className="text-sm font-semibold text-brand-teal">Uploading video to Cloudinary...</p>
+                      <p className="text-xs text-gray-500 mt-1">Please wait a moment while your video is processed</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-200 ${
+                          isDraggingVideo
+                            ? 'bg-brand-teal text-white scale-110 shadow-md'
+                            : 'bg-brand-teal/10 text-brand-teal'
+                        }`}
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700 text-center">
+                        {isDraggingVideo ? (
+                          <span className="text-brand-teal font-semibold text-base">Drop video here to upload</span>
+                        ) : (
+                          <>
+                            <span className="text-brand-teal font-semibold hover:underline">Click to upload</span> or drag and drop video here
+                          </>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        Supported: MP4, WebM, MOV, AVI (Max 100MB each)
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2">

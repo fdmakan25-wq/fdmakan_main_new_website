@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminCredentials, signAdminSession, ADMIN_COOKIE_NAME } from '@/lib/auth';
+import { validateAdminCredentials } from '@/lib/auth';
+import { createTwoFactorChallenge } from '@/lib/auth-2fa';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,26 +23,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT
-    const token = await signAdminSession(email.trim().toLowerCase());
+    // Step 1: Validated credentials. Now initiate 2FA OTP sent to aman.fdmps@gmail.com
+    const challenge = await createTwoFactorChallenge(email.trim().toLowerCase());
 
-    const response = NextResponse.json(
-      { success: true, message: 'Authentication successful' },
+    if (!challenge.success) {
+      return NextResponse.json(
+        { error: challenge.error || 'Failed to dispatch verification code' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        requires2FA: true,
+        twoFactorToken: challenge.twoFactorToken,
+        targetEmail: challenge.targetEmail,
+        message: `A verification code has been sent to ${challenge.targetEmail}.`,
+      },
       { status: 200 }
     );
-
-    // Set secure HTTP-only cookie
-    response.cookies.set({
-      name: ADMIN_COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
-
-    return response;
   } catch (error: any) {
     console.error('Login error:', error);
     return NextResponse.json(

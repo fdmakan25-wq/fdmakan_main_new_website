@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import SafeImage from '@/components/SafeImage';
 import { formatPropertyPrice } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
+import ScrollReveal from '@/components/ScrollReveal';
 
 interface TopSellingProject {
   id: string;
@@ -120,45 +121,47 @@ export default function TopSellingProjects() {
     <section className="py-7 md:py-10 bg-gradient-to-b from-amber-50/40 via-white to-slate-50/50">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 sm:mb-7 gap-3">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-100/90 px-3 py-1 rounded-full mb-2 border border-amber-200 shadow-2xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-              <span>Fastest Selling Properties</span>
+        <ScrollReveal animation="fade-down" duration={700}>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 sm:mb-7 gap-3">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-100/90 px-3 py-1 rounded-full mb-2 border border-amber-200 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                <span>Fastest Selling Properties</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+                Top Selling <span className="text-brand-red">Developments</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                High investor demand & fast-moving inventory across prime locations
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-              Top Selling <span className="text-brand-red">Developments</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              High investor demand & fast-moving inventory across prime locations
-            </p>
-          </div>
 
-          {projects.length > visibleCount && (
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <button
-                type="button"
-                onClick={prevSlide}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-slate-900 hover:text-white hover:border-slate-900 text-gray-700 transition active:scale-95"
-                aria-label="Previous"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={nextSlide}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-slate-900 hover:text-white hover:border-slate-900 text-gray-700 transition active:scale-95"
-                aria-label="Next"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          )}
-        </div>
+            {projects.length > visibleCount && (
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={prevSlide}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-slate-900 hover:text-white hover:border-slate-900 text-gray-700 transition active:scale-95"
+                  aria-label="Previous"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={nextSlide}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-slate-900 hover:text-white hover:border-slate-900 text-gray-700 transition active:scale-95"
+                  aria-label="Next"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+        </ScrollReveal>
 
         {/* Carousel Content */}
         {loading ? (
@@ -166,7 +169,8 @@ export default function TopSellingProjects() {
             <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="relative">
+          <ScrollReveal animation="fade-up" delay={120} duration={800}>
+            <div className="relative">
             <div className="overflow-hidden py-1">
               <div
                 className="flex transition-transform duration-500 ease-out"
@@ -294,6 +298,7 @@ export default function TopSellingProjects() {
               </div>
             )}
           </div>
+        </ScrollReveal>
         )}
       </div>
     </section>

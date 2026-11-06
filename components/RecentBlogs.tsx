@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
+import ScrollReveal from '@/components/ScrollReveal';
 
 interface Blog {
   _id: string;
@@ -99,85 +100,91 @@ export default function RecentBlogs() {
           <div className="relative">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className="lg:col-span-3 relative">
-                <div className="bg-brand-red/10 rounded-2xl p-3.5 shadow-sm h-full relative flex flex-col justify-center">
-                  <button
-                    type="button"
-                    onClick={prevSlide}
-                    className="absolute -left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition z-10"
-                    aria-label="Previous"
-                  >
-                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-gray-900 text-xs leading-tight line-clamp-1">{prevBlog.title}</h4>
-                    <p className="text-gray-600 text-[11px] line-clamp-2">{prevBlog.excerpt}</p>
-                    <div className="flex items-center justify-between pt-1.5 border-t border-gray-200">
-                      <div className="text-gray-500 text-[10px]">
-                        <span className="font-semibold">{prevBlog.author}</span>
-                      </div>
-                      <div className="text-gray-400 text-[10px]">{prevBlog.date}</div>
-                    </div>
-                    <Link
-                      href={`/blogs/${prevBlog._id}`}
-                      className="w-full bg-brand-red text-white py-1 px-2.5 rounded-md font-semibold hover:bg-brand-red-dark transition mt-1.5 text-xs text-center block"
+                <ScrollReveal animation="fade-left" delay={50} duration={750} className="h-full">
+                  <div className="bg-brand-red/10 rounded-2xl p-3.5 shadow-sm h-full relative flex flex-col justify-center">
+                    <button
+                      type="button"
+                      onClick={prevSlide}
+                      className="absolute -left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition z-10"
+                      aria-label="Previous"
                     >
-                      Read More
-                    </Link>
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-gray-900 text-xs leading-tight line-clamp-1">{prevBlog.title}</h4>
+                      <p className="text-gray-600 text-[11px] line-clamp-2">{prevBlog.excerpt}</p>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-gray-200">
+                        <div className="text-gray-500 text-[10px]">
+                          <span className="font-semibold">{prevBlog.author}</span>
+                        </div>
+                        <div className="text-gray-400 text-[10px]">{prevBlog.date}</div>
+                      </div>
+                      <Link
+                        href={`/blogs/${prevBlog._id}`}
+                        className="w-full bg-brand-red text-white py-1 px-2.5 rounded-md font-semibold hover:bg-brand-red-dark transition mt-1.5 text-xs text-center block"
+                      >
+                        Read More
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                </ScrollReveal>
               </div>
 
               <div className="lg:col-span-6 relative">
-                <Link href={`/blogs/${currentBlog._id}`} className="block relative h-[210px] sm:h-[230px] rounded-2xl overflow-hidden shadow-lg group">
-                  {currentBlog.image ? (
-                    <SafeImage src={currentBlog.image} alt={currentBlog.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="50vw" />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 sm:p-5 flex flex-col justify-end">
-                    <h3 className="font-bold text-white text-base sm:text-lg leading-tight mb-1.5 line-clamp-2">
-                      {currentBlog.title}
-                    </h3>
-                    <p className="text-white/80 text-xs leading-relaxed line-clamp-2">
-                      {currentBlog.excerpt}
-                    </p>
-                  </div>
-                </Link>
+                <ScrollReveal animation="zoom-in" delay={150} duration={800} className="h-full">
+                  <Link href={`/blogs/${currentBlog._id}`} className="block relative h-[210px] sm:h-[230px] rounded-2xl overflow-hidden shadow-lg group">
+                    {currentBlog.image ? (
+                      <SafeImage src={currentBlog.image} alt={currentBlog.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="50vw" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 sm:p-5 flex flex-col justify-end">
+                      <h3 className="font-bold text-white text-base sm:text-lg leading-tight mb-1.5 line-clamp-2">
+                        {currentBlog.title}
+                      </h3>
+                      <p className="text-white/80 text-xs leading-relaxed line-clamp-2">
+                        {currentBlog.excerpt}
+                      </p>
+                    </div>
+                  </Link>
+                </ScrollReveal>
               </div>
 
               <div className="lg:col-span-3 relative">
-                <div className="bg-brand-red/10 rounded-2xl p-4 shadow-lg h-full relative">
-                  <button
-                    type="button"
-                    onClick={nextSlide}
-                    className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition z-10"
-                    aria-label="Next"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-
-                  <div className="mt-2 space-y-1">
-                    <h4 className="font-bold text-gray-900 text-sm leading-tight">{nextBlog.title}</h4>
-                    <p className="text-gray-600 text-xs line-clamp-2">{nextBlog.excerpt}</p>
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
-                      <div className="text-gray-500 text-xs">
-                        <span className="font-semibold">{nextBlog.author}</span>
-                      </div>
-                      <div className="text-gray-400 text-xs">{nextBlog.date}</div>
-                    </div>
-                    <Link
-                      href={`/blogs/${nextBlog._id}`}
-                      className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm text-center block"
+                <ScrollReveal animation="fade-right" delay={250} duration={750} className="h-full">
+                  <div className="bg-brand-red/10 rounded-2xl p-4 shadow-lg h-full relative">
+                    <button
+                      type="button"
+                      onClick={nextSlide}
+                      className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition z-10"
+                      aria-label="Next"
                     >
-                      Read More
-                    </Link>
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+
+                    <div className="mt-2 space-y-1">
+                      <h4 className="font-bold text-gray-900 text-sm leading-tight">{nextBlog.title}</h4>
+                      <p className="text-gray-600 text-xs line-clamp-2">{nextBlog.excerpt}</p>
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                        <div className="text-gray-500 text-xs">
+                          <span className="font-semibold">{nextBlog.author}</span>
+                        </div>
+                        <div className="text-gray-400 text-xs">{nextBlog.date}</div>
+                      </div>
+                      <Link
+                        href={`/blogs/${nextBlog._id}`}
+                        className="w-full bg-brand-red text-white py-1.5 px-3 rounded-lg font-semibold hover:bg-brand-red-dark transition mt-2 text-sm text-center block"
+                      >
+                        Read More
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                </ScrollReveal>
               </div>
             </div>
           </div>
