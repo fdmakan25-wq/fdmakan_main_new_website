@@ -20,6 +20,8 @@ export default function SafeImage({ src, alt, ...props }: SafeImageProps) {
       <img
         src={src}
         alt={alt || ''}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
         className={className}
         style={{
           position: 'absolute',
@@ -39,6 +41,8 @@ export default function SafeImage({ src, alt, ...props }: SafeImageProps) {
     <img
       src={src}
       alt={alt || ''}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
       width={typeof width === 'number' ? width : undefined}
       height={typeof height === 'number' ? height : undefined}
       className={className}

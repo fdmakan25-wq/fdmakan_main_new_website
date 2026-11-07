@@ -22,6 +22,16 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [activeTab, setActiveTab] = useState<'site_visit' | 'presentation'>('site_visit');
+    const [confirmedData, setConfirmedData] = useState<{
+        orderNumber?: string;
+        propertyName: string;
+        name: string;
+        phone: string;
+        email?: string;
+        visitDate?: string;
+        rideType?: string;
+        type: 'site_visit' | 'presentation';
+    } | null>(null);
 
     const handleInquirySubmit = async (type: 'site_visit' | 'presentation') => {
         setMessage(null);
@@ -79,6 +89,18 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                 text: data.emailSent === false
                     ? 'Enquiry saved! Our team will contact you soon.'
                     : type === 'site_visit' ? 'Site visit booked successfully! Confirmation sent.' : 'Presentation appointment booked successfully!'
+            });
+
+            // Set confirmation modal data
+            setConfirmedData({
+                orderNumber: data.orderNumber || data.order?.orderNumber,
+                propertyName,
+                name: name.trim(),
+                phone: cleanedPhone,
+                email: email.trim(),
+                visitDate,
+                rideType: type === 'site_visit' ? rideType : undefined,
+                type,
             });
 
             // Reset form fields
@@ -274,6 +296,108 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                     </button>
                 </div>
             </div>
+
+            {/* Confirmation Modal Popup */}
+            {confirmedData && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+                    onClick={() => setConfirmedData(null)}
+                >
+                    <div
+                        className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header Banner */}
+                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-6 text-white text-center relative">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmedData(null)}
+                                className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/10 hover:bg-black/20 rounded-full w-8 h-8 flex items-center justify-center transition"
+                                aria-label="Close"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
+                            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-xs border border-white/30">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold">Enquiry Confirmed!</h3>
+                            <p className="text-emerald-100 text-xs mt-1">
+                                Your booking request has been successfully dispatched to our team.
+                            </p>
+                        </div>
+
+                        {/* Modal Body / Summary Details */}
+                        <div className="p-6 space-y-4">
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/70 space-y-2 text-xs">
+                                {confirmedData.orderNumber && (
+                                    <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                                        <span className="text-gray-500 font-medium">Reference ID</span>
+                                        <span className="font-bold text-navy-blue font-mono">{confirmedData.orderNumber}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center py-1">
+                                    <span className="text-gray-500 font-medium">Property</span>
+                                    <span className="font-semibold text-gray-900 text-right max-w-[60%] truncate">{confirmedData.propertyName}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-1">
+                                    <span className="text-gray-500 font-medium">Enquiry Type</span>
+                                    <span className="font-semibold text-navy-blue capitalize">
+                                        {confirmedData.type === 'site_visit' ? 'Site Visit with Free Ride' : 'Online Presentation'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center py-1">
+                                    <span className="text-gray-500 font-medium">Name</span>
+                                    <span className="font-semibold text-gray-900">{confirmedData.name}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-1">
+                                    <span className="text-gray-500 font-medium">Phone</span>
+                                    <span className="font-semibold text-gray-900">{confirmedData.phone}</span>
+                                </div>
+                                {confirmedData.email && (
+                                    <div className="flex justify-between items-center py-1">
+                                        <span className="text-gray-500 font-medium">Email</span>
+                                        <span className="font-semibold text-gray-900">{confirmedData.email}</span>
+                                    </div>
+                                )}
+                                {confirmedData.visitDate && (
+                                    <div className="flex justify-between items-center py-1">
+                                        <span className="text-gray-500 font-medium">Scheduled Date/Time</span>
+                                        <span className="font-semibold text-gray-900">
+                                            {new Date(confirmedData.visitDate).toLocaleString('en-IN', {
+                                                dateStyle: 'medium',
+                                                timeStyle: 'short',
+                                            })}
+                                        </span>
+                                    </div>
+                                )}
+                                {confirmedData.rideType && (
+                                    <div className="flex justify-between items-center py-1">
+                                        <span className="text-gray-500 font-medium">Pickup Partner</span>
+                                        <span className="font-bold text-brand-teal">{confirmedData.rideType}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <p className="text-center text-xs text-gray-500 leading-relaxed">
+                                Our dedicated property advisor will call you shortly to confirm the appointment.
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={() => setConfirmedData(null)}
+                                className="w-full bg-navy-blue hover:bg-[#1e4a7a] text-white py-3 rounded-xl font-bold text-sm transition shadow-md"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

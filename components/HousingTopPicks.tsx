@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import SafeImage from '@/components/SafeImage';
 import Link from 'next/link';
+import ShareButton from '@/components/ShareButton';
 import { formatPropertyPrice } from '@/lib/property-details-display';
 import ScrollReveal from '@/components/ScrollReveal';
+import { useProperties } from '@/components/PropertiesProvider';
 
 interface TopPickProject {
   id: string;
@@ -35,17 +37,26 @@ function TopPickCard({ project, inGrid = false }: { project: TopPickProject; inG
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
         
         {/* Badges Bar */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10">
           <span className="bg-gradient-to-r from-brand-red to-orange-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             {project.specialOffer || 'Featured'}
           </span>
-          <span className="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs flex items-center gap-1 border border-white/50">
-            <svg className="w-3 h-3 text-brand-teal" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            Verified
-          </span>
+          <div className="flex items-center gap-1.5">
+            <ShareButton
+              title={project.projectName}
+              url={typeof window !== 'undefined' ? `${window.location.origin}/view-details/${project.id}` : `/view-details/${project.id}`}
+              text={`Check out ${project.projectName} by ${project.developerName} in ${project.location} on FD Makan`}
+              iconOnly
+              className="!w-7 !h-7 !bg-white/90 text-slate-800"
+            />
+            <span className="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs flex items-center gap-1 border border-white/50">
+              <svg className="w-3 h-3 text-brand-teal" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Verified
+            </span>
+          </div>
         </div>
 
         {/* Project & Developer Overlay */}
@@ -120,6 +131,7 @@ function TopPickCard({ project, inGrid = false }: { project: TopPickProject; inG
 
 
 export default function HousingTopPicks() {
+  const { properties, loading: providerLoading } = useProperties();
   const [projects, setProjects] = useState<TopPickProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -144,53 +156,32 @@ export default function HousingTopPicks() {
   }, []);
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch('/api/properties');
-        if (!response.ok) return;
-        const data = await response.json();
+    if (!properties || properties.length === 0) {
+      if (!providerLoading) setLoading(false);
+      return;
+    }
 
-        const flagged = data.filter(
-          (p: { showInTopSelling?: boolean; showInPremium?: boolean }) =>
-            p.showInTopSelling || p.showInPremium
-        );
-        const source = flagged.length > 0 ? flagged : data;
+    const flagged = properties.filter(
+      (p) => p.showInTopSelling || p.showInPremium
+    );
+    const source = flagged.length > 0 ? flagged : properties;
 
-        const formatted: TopPickProject[] = source.map(
-          (prop: {
-            _id: string;
-            developer?: string;
-            name: string;
-            location: string;
-            price: number;
-            listingFor?: string;
-            pricing?: Array<{ type?: string; price?: string }>;
-            showInPremium?: boolean;
-            images?: string[];
-          }) => ({
-            id: prop._id,
-            developerName: prop.developer || 'Developer',
-            projectName: prop.name,
-            location: prop.location,
-            price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
-            apartmentTypes: prop.pricing?.length
-              ? prop.pricing.map((p) => p.type).filter(Boolean).join(', ')
-              : 'Premium Homes',
-            specialOffer: prop.showInPremium ? 'Premium Pick' : undefined,
-            image: prop.images?.[0] || PLACEHOLDER_IMAGE,
-          })
-        );
+    const formatted: TopPickProject[] = source.map((prop) => ({
+      id: prop._id,
+      developerName: prop.developer || 'Developer',
+      projectName: prop.name,
+      location: prop.location,
+      price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
+      apartmentTypes: prop.pricing?.length
+        ? prop.pricing.map((p) => p.type).filter(Boolean).join(', ')
+        : 'Premium Homes',
+      specialOffer: prop.showInPremium ? 'Premium Pick' : undefined,
+      image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+    }));
 
-        setProjects(formatted);
-      } catch (error) {
-        console.error('Error fetching top picks:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
+    setProjects(formatted);
+    setLoading(false);
+  }, [properties, providerLoading]);
 
   const maxIndex = Math.max(0, projects.length - visibleCount);
 

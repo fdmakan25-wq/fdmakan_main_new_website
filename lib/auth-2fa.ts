@@ -11,12 +11,18 @@ const MAX_VERIFY_ATTEMPTS = 5;
 const RESEND_COOLDOWN_SECONDS = 45;
 
 const getSecretKey = () => {
-  const secret = process.env.NEXTAUTH_SECRET || 'fdmakan_admin_jwt_secret_fallback_2026';
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret || secret.trim() === '') {
+    throw new Error('CRITICAL SECURITY ERROR: NEXTAUTH_SECRET is not defined in environment variables.');
+  }
   return new TextEncoder().encode(secret);
 };
 
 function hashOtp(otp: string, salt: string): string {
-  const secret = process.env.NEXTAUTH_SECRET || 'fdmakan_admin_jwt_secret_fallback_2026';
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret || secret.trim() === '') {
+    throw new Error('CRITICAL SECURITY ERROR: NEXTAUTH_SECRET is not defined in environment variables.');
+  }
   return crypto
     .createHmac('sha256', secret)
     .update(`${otp.trim()}:${salt}`)

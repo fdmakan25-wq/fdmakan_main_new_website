@@ -5,6 +5,7 @@ import SafeImage from '@/components/SafeImage';
 import { formatPropertyPrice } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
 import ScrollReveal from '@/components/ScrollReveal';
+import { useProperties } from '@/components/PropertiesProvider';
 
 interface LaunchProject {
   id: string;
@@ -22,62 +23,41 @@ const PLACEHOLDER_IMAGE =
   'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop';
 
 export default function NewlyLaunchedProjects() {
+  const { properties, loading: providerLoading } = useProperties();
   const [projects, setProjects] = useState<LaunchProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchNewlyLaunched = async () => {
-      try {
-        const response = await fetch('/api/properties');
-        if (!response.ok) return;
-        const data = await response.json();
-        const filtered = data
-          .filter((prop: { showInNewlyLaunched?: boolean }) => prop.showInNewlyLaunched === true)
-          .sort((a: { createdAt?: string }, b: { createdAt?: string }) => {
-            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            return dateB - dateA;
-          });
+    if (!properties || properties.length === 0) {
+      if (!providerLoading) setLoading(false);
+      return;
+    }
 
-        const formatted: LaunchProject[] = filtered.map(
-          (prop: {
-            _id: string;
-            name: string;
-            developer?: string;
-            price: number;
-            bedrooms?: number;
-            propertyType?: string;
-            listingFor?: string;
-            location: string;
-            city?: string;
-            description?: string;
-            images?: string[];
-            pricing?: Array<{ price?: string }>;
-          }) => ({
-            id: prop._id,
-            name: prop.name,
-            developer: prop.developer || 'Reputed Developer',
-            price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
-            typology: prop.bedrooms
-              ? `${prop.bedrooms} BHK`
-              : getPropertyTypeLabel(prop.propertyType || '') || 'Premium Residence',
-            location: prop.location,
-            city: prop.city,
-            description: prop.description,
-            image: prop.images?.[0] || PLACEHOLDER_IMAGE,
-          })
-        );
+    const filtered = properties
+      .filter((prop) => prop.showInNewlyLaunched === true)
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
 
-        setProjects(formatted);
-      } catch (error) {
-        console.error('Error fetching newly launched:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const formatted: LaunchProject[] = filtered.map((prop) => ({
+      id: prop._id,
+      name: prop.name,
+      developer: prop.developer || 'Reputed Developer',
+      price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
+      typology: prop.bedrooms
+        ? `${prop.bedrooms} BHK`
+        : getPropertyTypeLabel(prop.propertyType || '') || 'Premium Residence',
+      location: prop.location,
+      city: prop.city,
+      description: prop.description,
+      image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+    }));
 
-    fetchNewlyLaunched();
-  }, []);
+    setProjects(formatted);
+    setLoading(false);
+  }, [properties, providerLoading]);
 
   if (!loading && projects.length === 0) return null;
 

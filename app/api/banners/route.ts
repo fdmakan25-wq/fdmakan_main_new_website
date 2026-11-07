@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
       .sort({ order: 1, createdAt: -1 })
       .toArray();
 
-    return NextResponse.json(banners, { status: 200 });
+    return NextResponse.json(banners, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching banners:', error);

@@ -8,6 +8,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid banner ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const banner = await db.collection('banners').findOne({
       _id: new ObjectId(params.id),
@@ -33,6 +37,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid banner ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const body = await request.json();
     const { title, subtitle, image, active, order } = body;
@@ -81,6 +89,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid banner ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const result = await db.collection('banners').deleteOne({
       _id: new ObjectId(params.id),

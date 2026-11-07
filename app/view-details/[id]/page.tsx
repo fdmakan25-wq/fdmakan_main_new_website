@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ShareButton from '@/components/ShareButton';
 import PropertyStatsSidebar from '@/components/PropertyStatsSidebar';
 import PropertyContactSidebar from '@/components/PropertyContactSidebar';
 import PropertyImageLightbox from '@/components/PropertyImageLightbox';
@@ -504,17 +505,24 @@ export default function PropertyDetailsPage() {
                       {property.name}
                     </h1>
                   </div>
-                  {(property.location || property.city) && (
-                    <p className="text-xs md:text-sm text-gray-500 font-normal flex items-center gap-1.5 flex-shrink-0 text-right">
-                      <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="truncate max-w-[120px] md:max-w-none">
-                        {[property.location, property.city].filter(Boolean).join(', ')}
-                      </span>
-                    </p>
-                  )}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {(property.location || property.city) && (
+                      <p className="hidden sm:flex text-xs md:text-sm text-gray-500 font-normal items-center gap-1.5 text-right">
+                        <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="truncate max-w-[120px] md:max-w-none">
+                          {[property.location, property.city].filter(Boolean).join(', ')}
+                        </span>
+                      </p>
+                    )}
+                    <ShareButton
+                      title={property.name}
+                      text={`Check out ${property.name} on FD Makan`}
+                      className="!bg-slate-100 hover:!bg-brand-red hover:!text-white"
+                    />
+                  </div>
                 </div>
                 <div className="overflow-x-auto scrollbar-hide py-3 px-2 md:px-3">
                   <div className="flex whitespace-nowrap min-w-full gap-2 px-1">

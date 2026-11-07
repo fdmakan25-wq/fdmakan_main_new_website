@@ -4,7 +4,10 @@ import { NextRequest } from 'next/server';
 export const ADMIN_COOKIE_NAME = 'admin_session_token';
 
 const getSecretKey = () => {
-  const secret = process.env.NEXTAUTH_SECRET || 'fdmakan_admin_jwt_secret_fallback_2026';
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret || secret.trim() === '') {
+    throw new Error('CRITICAL SECURITY ERROR: NEXTAUTH_SECRET is not defined in environment variables.');
+  }
   return new TextEncoder().encode(secret);
 };
 

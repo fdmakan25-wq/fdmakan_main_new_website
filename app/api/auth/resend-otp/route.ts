@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resendTwoFactorOTP } from '@/lib/auth-2fa';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`resend-otp:${ip}`, { limit: 5, windowMs: 15 * 60 * 1000 });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Too many resend attempts. Please wait ${Math.ceil(rateLimit.retryAfterSeconds / 60)} minutes.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) },
+        }
+      );
+    }
+
     const body = await request.json();
     const { twoFactorToken } = body;
 

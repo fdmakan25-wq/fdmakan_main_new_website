@@ -3,7 +3,12 @@ import { getDatabase } from '@/lib/mongodb';
 import { uploadImage, uploadVideo } from '@/lib/cloudinary';
 import { PropertyInputSchema } from '@/lib/validations';
 
-// GET - Fetch properties (supports optional pagination and filter queries)
+// Helper function to escape special regex metacharacters to prevent ReDoS & NoSQL injection
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// GET - Fetch properties (supports optional pagination, search, and filter queries)
 export async function GET(request: NextRequest) {
   try {
     const db = await getDatabase();
@@ -14,9 +19,11 @@ export async function GET(request: NextRequest) {
     const city = searchParams.get('city');
     const category = searchParams.get('propertyCategory') || searchParams.get('category');
     const featured = searchParams.get('featured');
+    const search = searchParams.get('search');
 
     if (city && city.trim() !== '') {
-      query.city = { $regex: new RegExp(`^${city.trim()}$`, 'i') };
+      const escapedCity = escapeRegex(city.trim());
+      query.city = { $regex: new RegExp(`^${escapedCity}$`, 'i') };
     }
     if (category && category.trim() !== '') {
       query.propertyCategory = category.trim();
@@ -27,6 +34,16 @@ export async function GET(request: NextRequest) {
       query.showInPremium = true;
     } else if (featured === 'newlyLaunched') {
       query.showInNewlyLaunched = true;
+    }
+
+    if (search && search.trim() !== '') {
+      const escapedSearch = escapeRegex(search.trim());
+      const searchRegex = new RegExp(escapedSearch, 'i');
+      query.$or = [
+        { name: { $regex: searchRegex } },
+        { location: { $regex: searchRegex } },
+        { 'developer.name': { $regex: searchRegex } },
+      ];
     }
 
     // Pagination (optional to preserve existing full array calls)
@@ -51,12 +68,22 @@ export async function GET(request: NextRequest) {
           total,
           totalPages: Math.ceil(total / limit),
         },
-      }, { status: 200 });
+      }, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+        },
+      });
     }
 
     // Default: fetch all properties with sort
     const properties = await db.collection('properties').find(query).sort({ createdAt: -1 }).toArray();
-    return NextResponse.json(properties, { status: 200 });
+    return NextResponse.json(properties, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching properties:', error);
     return NextResponse.json(

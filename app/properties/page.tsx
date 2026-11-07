@@ -5,9 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PropertyCard from '@/components/PropertyCard';
+import { useProperties } from '@/components/PropertiesProvider';
+import Pagination from '@/components/dashboard/Pagination';
 
 interface PricingRow {
-  type: string;
+  type?: string;
   carpetArea?: string;
   price?: string;
 }
@@ -41,38 +43,22 @@ const TYPE_LABELS: Record<string, string> = {
 function PropertiesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { properties, loading } = useProperties();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || 'all');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || '');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-
-  useEffect(() => {
-    fetchProperties();
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
 
   useEffect(() => {
     setSearch(searchParams.get('search') || '');
     setLocationFilter(searchParams.get('location') || 'all');
     setStatusFilter(searchParams.get('status') || '');
     setTypeFilter(searchParams.get('type') || '');
+    setCurrentPage(1);
   }, [searchParams]);
-
-  const fetchProperties = async () => {
-    try {
-      const response = await fetch('/api/properties');
-      if (response.ok) {
-        const data = await response.json();
-        setProperties(data);
-      }
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const locations = useMemo(() => {
     const unique = Array.from(new Set(properties.map((p) => p.location).filter(Boolean)));
@@ -115,6 +101,13 @@ function PropertiesContent() {
       );
     });
   }, [properties, search, locationFilter, statusFilter, typeFilter]);
+
+  const paginatedProperties = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProperties.slice(start, start + pageSize);
+  }, [filteredProperties, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredProperties.length / pageSize) || 1;
 
   const applyFilters = () => {
     const params = new URLSearchParams();
@@ -397,7 +390,7 @@ function PropertiesContent() {
                 Showing {filteredProperties.length} of {properties.length} properties
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredProperties.map((property) => (
+                {paginatedProperties.map((property) => (
                   <PropertyCard
                     key={property._id}
                     property={{
@@ -416,6 +409,26 @@ function PropertiesContent() {
                   />
                 ))}
               </div>
+
+              {filteredProperties.length > pageSize && (
+                <div className="mt-10 bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredProperties.length}
+                    pageSize={pageSize}
+                    pageSizeOptions={[9, 18, 36]}
+                    onPageChange={(page) => {
+                      setCurrentPage(page);
+                      window.scrollTo({ top: 350, behavior: 'smooth' });
+                    }}
+                    onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setCurrentPage(1);
+                    }}
+                  />
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center py-24">

@@ -111,7 +111,7 @@ export default function AboutSection() {
               {/* Quote/Testimonial Box */}
               <div className="bg-brand-red/10 rounded-lg p-3.5 border-l-4 border-brand-red">
                 <p className="text-gray-700 italic text-xs leading-relaxed">
-                  "Enimad minim veniam quis nostrud exercitation llamco laboris. Lorem ipsum dolor sit amet"
+                  "Our mission is to bring transparency, integrity, and unparalleled service to every property transaction across India."
                 </p>
               </div>
 

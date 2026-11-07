@@ -7,6 +7,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid location ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const body = await request.json();
     const { name, cityId } = body;
@@ -14,8 +18,8 @@ export async function PUT(
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Location name is required' }, { status: 400 });
     }
-    if (!cityId) {
-      return NextResponse.json({ error: 'City is required' }, { status: 400 });
+    if (!cityId || !ObjectId.isValid(cityId)) {
+      return NextResponse.json({ error: 'A valid city ID is required' }, { status: 400 });
     }
 
     const city = await db.collection('cities').findOne({ _id: new ObjectId(cityId) });
@@ -70,6 +74,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid location ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const result = await db.collection('locations').deleteOne({
       _id: new ObjectId(params.id),

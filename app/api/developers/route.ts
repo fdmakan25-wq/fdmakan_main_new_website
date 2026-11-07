@@ -7,7 +7,12 @@ export async function GET(request: NextRequest) {
     const db = await getDatabase();
     const developers = await db.collection('developers').find({}).sort({ createdAt: -1 }).toArray();
     
-    return NextResponse.json(developers, { status: 200 });
+    return NextResponse.json(developers, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching developers:', error);
     return NextResponse.json(

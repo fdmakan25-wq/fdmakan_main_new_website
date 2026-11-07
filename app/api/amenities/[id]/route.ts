@@ -8,6 +8,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid amenity ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const body = await request.json();
     const { name, icon } = body;
@@ -66,6 +70,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid amenity ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const result = await db.collection('amenities').deleteOne({
       _id: new ObjectId(params.id),

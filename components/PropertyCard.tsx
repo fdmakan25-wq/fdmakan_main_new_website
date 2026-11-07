@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
+import ShareButton from '@/components/ShareButton';
 import { formatPropertyPrice, getListingBadgeLabel } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
 
@@ -54,7 +55,15 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
         />
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col items-end gap-1.5">
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
+          <ShareButton
+            title={displayTitle}
+            url={typeof window !== 'undefined' ? `${window.location.origin}/view-details/${displayId}` : `/view-details/${displayId}`}
+            text={`Check out ${displayTitle} in ${property.location} on FD Makan`}
+            iconOnly
+          />
+        </div>
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col items-end gap-1.5 z-10">
           {listingBadge && (
             <span className="bg-brand-red/95 backdrop-blur-sm text-white px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-md">
               {listingBadge}

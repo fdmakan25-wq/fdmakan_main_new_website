@@ -7,7 +7,12 @@ export async function GET(request: NextRequest) {
     const db = await getDatabase();
     const blogs = await db.collection('blogs').find({}).sort({ createdAt: -1 }).toArray();
     
-    return NextResponse.json(blogs, { status: 200 });
+    return NextResponse.json(blogs, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching blogs:', error);
     return NextResponse.json(

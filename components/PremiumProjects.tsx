@@ -5,6 +5,7 @@ import SafeImage from '@/components/SafeImage';
 import { formatPropertyPrice } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
 import ScrollReveal from '@/components/ScrollReveal';
+import { useProperties } from '@/components/PropertiesProvider';
 
 interface DisplayProject {
   id: string;
@@ -20,52 +21,33 @@ const PLACEHOLDER_IMAGE =
   'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop';
 
 export default function PremiumProjects() {
+  const { properties, loading: providerLoading } = useProperties();
   const [projects, setProjects] = useState<DisplayProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const response = await fetch('/api/properties');
-        if (!response.ok) return;
-        const data = await response.json();
-        const premiumProperties = data.filter((prop: { showInPremium?: boolean }) => prop.showInPremium === true);
+    if (!properties || properties.length === 0) {
+      if (!providerLoading) setLoading(false);
+      return;
+    }
 
-        const formatted: DisplayProject[] = premiumProperties.slice(0, 5).map(
-          (prop: {
-            _id: string;
-            name: string;
-            price: number;
-            bedrooms?: number;
-            propertyType?: string;
-            listingFor?: string;
-            location: string;
-            description?: string;
-            images?: string[];
-            pricing?: Array<{ price?: string }>;
-          }) => ({
-            id: prop._id,
-            name: prop.name.toUpperCase(),
-            price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
-            typology: prop.bedrooms
-              ? `${prop.bedrooms} BHK`
-              : getPropertyTypeLabel(prop.propertyType || '') || 'Property',
-            location: prop.location,
-            description: prop.description || '',
-            image: prop.images?.[0] || PLACEHOLDER_IMAGE,
-          })
-        );
+    const premiumProperties = properties.filter((prop) => prop.showInPremium === true);
 
-        setProjects(formatted);
-      } catch (error) {
-        console.error('Error fetching properties:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const formatted: DisplayProject[] = premiumProperties.slice(0, 5).map((prop) => ({
+      id: prop._id,
+      name: prop.name.toUpperCase(),
+      price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
+      typology: prop.bedrooms
+        ? `${prop.bedrooms} BHK`
+        : getPropertyTypeLabel(prop.propertyType || '') || 'Property',
+      location: prop.location,
+      description: prop.description || '',
+      image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+    }));
 
-    fetchProperties();
-  }, []);
+    setProjects(formatted);
+    setLoading(false);
+  }, [properties, providerLoading]);
 
   if (!loading && projects.length === 0) {
     return null;

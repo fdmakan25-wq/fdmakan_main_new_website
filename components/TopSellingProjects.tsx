@@ -5,6 +5,7 @@ import SafeImage from '@/components/SafeImage';
 import { formatPropertyPrice } from '@/lib/property-details-display';
 import { getPropertyTypeLabel } from '@/lib/property-listing-options';
 import ScrollReveal from '@/components/ScrollReveal';
+import { useProperties } from '@/components/PropertiesProvider';
 
 interface TopSellingProject {
   id: string;
@@ -22,6 +23,7 @@ const PLACEHOLDER_IMAGE =
   'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop';
 
 export default function TopSellingProjects() {
+  const { properties, loading: providerLoading } = useProperties();
   const [projects, setProjects] = useState<TopSellingProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -45,61 +47,40 @@ export default function TopSellingProjects() {
   }, []);
 
   useEffect(() => {
-    const fetchTopSelling = async () => {
-      try {
-        const response = await fetch('/api/properties');
-        if (!response.ok) return;
-        const data = await response.json();
-        const filtered = data.filter(
-          (prop: { showInTopSelling?: boolean }) => prop.showInTopSelling === true
-        );
+    if (!properties || properties.length === 0) {
+      if (!providerLoading) setLoading(false);
+      return;
+    }
 
-        const formatted: TopSellingProject[] = filtered.map(
-          (
-            prop: {
-              _id: string;
-              name: string;
-              developer?: string;
-              price: number;
-              bedrooms?: number;
-              propertyType?: string;
-              listingFor?: string;
-              location: string;
-              images?: string[];
-              pricing?: Array<{ price?: string }>;
-            },
-            index: number
-          ) => {
-            const seedPercentages = [92, 88, 95, 85, 90, 87];
-            const soldPercentage = seedPercentages[index % seedPercentages.length];
-            const unitsLeft = Math.max(2, 100 - soldPercentage);
+    const filtered = properties.filter(
+      (prop) => prop.showInTopSelling === true
+    );
 
-            return {
-              id: prop._id,
-              name: prop.name,
-              developer: prop.developer || 'Reputed Builder',
-              price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
-              typology: prop.bedrooms
-                ? `${prop.bedrooms} BHK`
-                : getPropertyTypeLabel(prop.propertyType || '') || 'Luxury Residence',
-              location: prop.location,
-              image: prop.images?.[0] || PLACEHOLDER_IMAGE,
-              soldPercentage,
-              unitsLeft,
-            };
-          }
-        );
+    const formatted: TopSellingProject[] = filtered.map(
+      (prop, index: number) => {
+        const seedPercentages = [92, 88, 95, 85, 90, 87];
+        const soldPercentage = seedPercentages[index % seedPercentages.length];
+        const unitsLeft = Math.max(2, 100 - soldPercentage);
 
-        setProjects(formatted);
-      } catch (error) {
-        console.error('Error fetching top selling:', error);
-      } finally {
-        setLoading(false);
+        return {
+          id: prop._id,
+          name: prop.name,
+          developer: prop.developer || 'Reputed Builder',
+          price: formatPropertyPrice(prop.price, prop.listingFor, prop.pricing),
+          typology: prop.bedrooms
+            ? `${prop.bedrooms} BHK`
+            : getPropertyTypeLabel(prop.propertyType || '') || 'Luxury Residence',
+          location: prop.location,
+          image: prop.images?.[0] || PLACEHOLDER_IMAGE,
+          soldPercentage,
+          unitsLeft,
+        };
       }
-    };
+    );
 
-    fetchTopSelling();
-  }, []);
+    setProjects(formatted);
+    setLoading(false);
+  }, [properties, providerLoading]);
 
   const maxIndex = Math.max(0, projects.length - visibleCount);
 

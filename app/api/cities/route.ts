@@ -28,7 +28,15 @@ export async function GET() {
         cityId: null,
       }));
 
-    return NextResponse.json({ cities: grouped, uncategorized }, { status: 200 });
+    return NextResponse.json(
+      { cities: grouped, uncategorized },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching cities:', error);

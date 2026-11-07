@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadImage } from '@/lib/cloudinary';
+import { getAdminSessionFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Require admin session to upload media
+    const session = await getAdminSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Admin authentication required to upload images' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folder = (formData.get('folder') as string) || 'fdmakan/properties';
@@ -15,19 +25,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.' },
+        { error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File size too large. Maximum size is 10MB.' },
+        { error: 'File size too large. Maximum size is 5MB.' },
         { status: 400 }
       );
     }

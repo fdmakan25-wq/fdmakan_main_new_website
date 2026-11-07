@@ -7,6 +7,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid city ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const body = await request.json();
     const { name } = body;
@@ -52,6 +56,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid city ID' }, { status: 400 });
+    }
+
     const db = await getDatabase();
     const cityId = new ObjectId(params.id);
 
