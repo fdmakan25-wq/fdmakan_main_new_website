@@ -12,6 +12,7 @@ import PropertyStatsSidebar from '@/components/PropertyStatsSidebar';
 import PropertyContactSidebar from '@/components/PropertyContactSidebar';
 import PropertyImageLightbox from '@/components/PropertyImageLightbox';
 import EmiCalculator from '@/components/EmiCalculator';
+import { CONTACT_PHONE_TEL } from '@/lib/contact';
 import {
   buildPropertyMapQuery,
   getGoogleMapsEmbedUrl,
@@ -123,6 +124,17 @@ export default function PropertyDetailsPage() {
   const [pricingFilter, setPricingFilter] = useState('all');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('highlights');
+  const [mobileEnquiryOpen, setMobileEnquiryOpen] = useState(false);
+
+  // Lock body scroll when mobile enquiry modal is open
+  useEffect(() => {
+    if (!mobileEnquiryOpen) return;
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = orig;
+    };
+  }, [mobileEnquiryOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -965,14 +977,60 @@ export default function PropertyDetailsPage() {
       </div >
 
       {/* Mobile Sticky Bottom Action Bar (Only visible on small screens where sidebars are hidden) */}
-      < div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-2xl z-50 flex gap-4" >
-        <button className="flex-1 bg-white border border-navy-blue text-navy-blue py-3 rounded-lg font-bold">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 sm:p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] z-40 flex items-center gap-3">
+        <a
+          href={`tel:${CONTACT_PHONE_TEL}`}
+          className="flex-1 bg-white border-2 border-navy-blue text-navy-blue py-3 rounded-xl font-bold text-center text-sm shadow-sm active:scale-[0.98] transition flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4 text-navy-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
           Call Now
+        </a>
+        <button
+          type="button"
+          onClick={() => setMobileEnquiryOpen(true)}
+          className="flex-1 bg-gradient-to-r from-navy-blue to-brand-teal text-white py-3 rounded-xl font-bold text-sm shadow-md active:scale-[0.98] transition flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Book Visit / Enquiry
         </button>
-        <button className="flex-1 bg-navy-blue text-white py-3 rounded-lg font-bold">
-          Book Visit
-        </button>
-      </div >
+      </div>
+
+      {/* Mobile Enquiry Bottom Sheet / Modal */}
+      {mobileEnquiryOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs overscroll-contain animate-in fade-in duration-200"
+          onClick={() => setMobileEnquiryOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-h-[85vh] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header handle & close */}
+            <div className="pt-3 pb-2 px-6 flex items-center justify-between border-b border-gray-100 bg-gray-50/80">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
+                <h3 className="font-bold text-gray-900 text-sm">Enquire for {property.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileEnquiryOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center hover:bg-gray-300 text-lg transition"
+                aria-label="Close form"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-4 overscroll-contain pb-6">
+              <PropertyContactSidebar propertyName={property.name} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {hasImages && (
         <PropertyImageLightbox

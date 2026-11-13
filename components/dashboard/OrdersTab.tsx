@@ -50,6 +50,21 @@ export default function OrdersTab() {
     setCurrentPage(1);
   }, [statusFilter]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedOrder(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = orig;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [selectedOrder]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
@@ -411,33 +426,39 @@ export default function OrdersTab() {
 
       {/* Elegant Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <div
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in"
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-auto max-h-[90vh] flex flex-col overflow-hidden border border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between z-10 flex-shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center font-bold text-lg">
+                <div className="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center font-bold text-lg flex-shrink-0">
                   📋
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                     Enquiry #{selectedOrder.orderNumber}
                   </h2>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[11px] sm:text-xs text-gray-500">
                     Received on {new Date(selectedOrder.createdAt).toLocaleString()}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition flex-shrink-0"
               >
                 ✕
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto overscroll-contain flex-1">
               {/* Status & Type Bar */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200/70">
                 <div className="flex items-center gap-2">

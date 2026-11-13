@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CallMeInstantlyCard from '@/components/CallMeInstantlyCard';
 import EnquiryIcon, { BuildingIcon, CalendarIcon, VideoIcon, CarIcon } from '@/components/EnquiryIcon';
 
@@ -32,6 +32,31 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
         rideType?: string;
         type: 'site_visit' | 'presentation';
     } | null>(null);
+
+    // Lock background scroll when confirmation modal is open
+    useEffect(() => {
+        if (!confirmedData) return;
+
+        const originalOverflow = document.body.style.overflow;
+        const originalTouchAction = document.body.style.touchAction;
+
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setConfirmedData(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            document.body.style.touchAction = originalTouchAction;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [confirmedData]);
 
     const handleInquirySubmit = async (type: 'site_visit' | 'presentation') => {
         setMessage(null);
@@ -300,74 +325,77 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
             {/* Confirmation Modal Popup */}
             {confirmedData && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200 overscroll-contain overflow-y-auto"
                     onClick={() => setConfirmedData(null)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="enquiry-confirmed-title"
                 >
                     <div
-                        className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+                        className="bg-white w-full max-w-md max-h-[90vh] my-auto rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header Banner */}
-                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-6 text-white text-center relative">
+                        {/* Header Banner - Fixed top */}
+                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-5 sm:px-6 sm:py-6 text-white text-center relative flex-shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setConfirmedData(null)}
-                                className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/10 hover:bg-black/20 rounded-full w-8 h-8 flex items-center justify-center transition"
-                                aria-label="Close"
+                                className="absolute top-3.5 right-3.5 text-white/80 hover:text-white bg-black/15 hover:bg-black/30 rounded-full w-8 h-8 flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-white/40"
+                                aria-label="Close confirmation modal"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
 
-                            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-xs border border-white/30">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2.5 backdrop-blur-xs border border-white/30 shadow-inner">
+                                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold">Enquiry Confirmed!</h3>
-                            <p className="text-emerald-100 text-xs mt-1">
+                            <h3 id="enquiry-confirmed-title" className="text-lg sm:text-xl font-bold">Enquiry Confirmed!</h3>
+                            <p className="text-emerald-100 text-[11px] sm:text-xs mt-1 max-w-xs mx-auto">
                                 Your booking request has been successfully dispatched to our team.
                             </p>
                         </div>
 
-                        {/* Modal Body / Summary Details */}
-                        <div className="p-6 space-y-4">
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/70 space-y-2 text-xs">
+                        {/* Modal Body / Summary Details - Scrollable if screen height is constrained */}
+                        <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto overscroll-contain flex-1">
+                            <div className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-200/70 space-y-2 text-xs divide-y divide-slate-200/50">
                                 {confirmedData.orderNumber && (
-                                    <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                                    <div className="flex justify-between items-center pb-2">
                                         <span className="text-gray-500 font-medium">Reference ID</span>
-                                        <span className="font-bold text-navy-blue font-mono">{confirmedData.orderNumber}</span>
+                                        <span className="font-bold text-navy-blue font-mono text-[11px] sm:text-xs bg-navy-blue/5 px-2 py-0.5 rounded">{confirmedData.orderNumber}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between items-center py-1">
-                                    <span className="text-gray-500 font-medium">Property</span>
-                                    <span className="font-semibold text-gray-900 text-right max-w-[60%] truncate">{confirmedData.propertyName}</span>
+                                <div className="flex justify-between items-center py-1.5 gap-2">
+                                    <span className="text-gray-500 font-medium flex-shrink-0">Property</span>
+                                    <span className="font-semibold text-gray-900 text-right truncate">{confirmedData.propertyName}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-1">
-                                    <span className="text-gray-500 font-medium">Enquiry Type</span>
-                                    <span className="font-semibold text-navy-blue capitalize">
-                                        {confirmedData.type === 'site_visit' ? 'Site Visit with Free Ride' : 'Online Presentation'}
+                                <div className="flex justify-between items-center py-1.5 gap-2">
+                                    <span className="text-gray-500 font-medium flex-shrink-0">Enquiry Type</span>
+                                    <span className="font-semibold text-navy-blue capitalize text-right">
+                                        {confirmedData.type === 'site_visit' ? 'Site Visit (Free Ride)' : 'Online Presentation'}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center py-1">
-                                    <span className="text-gray-500 font-medium">Name</span>
-                                    <span className="font-semibold text-gray-900">{confirmedData.name}</span>
+                                <div className="flex justify-between items-center py-1.5 gap-2">
+                                    <span className="text-gray-500 font-medium flex-shrink-0">Name</span>
+                                    <span className="font-semibold text-gray-900 text-right truncate">{confirmedData.name}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-1">
-                                    <span className="text-gray-500 font-medium">Phone</span>
-                                    <span className="font-semibold text-gray-900">{confirmedData.phone}</span>
+                                <div className="flex justify-between items-center py-1.5 gap-2">
+                                    <span className="text-gray-500 font-medium flex-shrink-0">Phone</span>
+                                    <span className="font-semibold text-gray-900 font-mono text-right">{confirmedData.phone}</span>
                                 </div>
                                 {confirmedData.email && (
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-gray-500 font-medium">Email</span>
-                                        <span className="font-semibold text-gray-900">{confirmedData.email}</span>
+                                    <div className="flex justify-between items-center py-1.5 gap-2">
+                                        <span className="text-gray-500 font-medium flex-shrink-0">Email</span>
+                                        <span className="font-semibold text-gray-900 text-right truncate max-w-[60%]">{confirmedData.email}</span>
                                     </div>
                                 )}
                                 {confirmedData.visitDate && (
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-gray-500 font-medium">Scheduled Date/Time</span>
-                                        <span className="font-semibold text-gray-900">
+                                    <div className="flex justify-between items-center py-1.5 gap-2">
+                                        <span className="text-gray-500 font-medium flex-shrink-0">Scheduled Time</span>
+                                        <span className="font-semibold text-gray-900 text-right">
                                             {new Date(confirmedData.visitDate).toLocaleString('en-IN', {
                                                 dateStyle: 'medium',
                                                 timeStyle: 'short',
@@ -376,21 +404,21 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                                     </div>
                                 )}
                                 {confirmedData.rideType && (
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-gray-500 font-medium">Pickup Partner</span>
-                                        <span className="font-bold text-brand-teal">{confirmedData.rideType}</span>
+                                    <div className="flex justify-between items-center pt-1.5 gap-2">
+                                        <span className="text-gray-500 font-medium flex-shrink-0">Pickup Partner</span>
+                                        <span className="font-bold text-brand-teal text-right uppercase tracking-wider">{confirmedData.rideType}</span>
                                     </div>
                                 )}
                             </div>
 
-                            <p className="text-center text-xs text-gray-500 leading-relaxed">
+                            <p className="text-center text-[11px] sm:text-xs text-gray-500 leading-relaxed px-1">
                                 Our dedicated property advisor will call you shortly to confirm the appointment.
                             </p>
 
                             <button
                                 type="button"
                                 onClick={() => setConfirmedData(null)}
-                                className="w-full bg-navy-blue hover:bg-[#1e4a7a] text-white py-3 rounded-xl font-bold text-sm transition shadow-md"
+                                className="w-full bg-navy-blue hover:bg-[#1e4a7a] active:scale-[0.99] text-white py-3 rounded-xl font-bold text-sm transition shadow-md"
                             >
                                 Done
                             </button>
