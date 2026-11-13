@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import CallMeInstantlyCard from '@/components/CallMeInstantlyCard';
 import EnquiryIcon, { BuildingIcon, CalendarIcon, VideoIcon, CarIcon } from '@/components/EnquiryIcon';
 
@@ -22,6 +23,7 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [activeTab, setActiveTab] = useState<'site_visit' | 'presentation'>('site_visit');
+    const [mounted, setMounted] = useState(false);
     const [confirmedData, setConfirmedData] = useState<{
         orderNumber?: string;
         propertyName: string;
@@ -32,6 +34,10 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
         rideType?: string;
         type: 'site_visit' | 'presentation';
     } | null>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Lock background scroll when confirmation modal is open
     useEffect(() => {
@@ -322,25 +328,25 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                 </div>
             </div>
 
-            {/* Confirmation Modal Popup */}
-            {confirmedData && (
+            {/* Confirmation Modal Popup - Portal to document.body to avoid stacking context issues */}
+            {mounted && confirmedData && createPortal(
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200 overscroll-contain overflow-y-auto"
+                    className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200 overscroll-contain overflow-y-auto"
                     onClick={() => setConfirmedData(null)}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="enquiry-confirmed-title"
                 >
                     <div
-                        className="bg-white w-full max-w-md max-h-[90vh] my-auto rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+                        className="bg-white w-full max-w-md max-h-[88vh] my-auto rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header Banner - Fixed top */}
-                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-5 sm:px-6 sm:py-6 text-white text-center relative flex-shrink-0">
+                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 pt-6 pb-5 sm:px-6 sm:pt-7 sm:pb-6 text-white text-center relative flex-shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setConfirmedData(null)}
-                                className="absolute top-3.5 right-3.5 text-white/80 hover:text-white bg-black/15 hover:bg-black/30 rounded-full w-8 h-8 flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-white/40"
+                                className="absolute top-3 right-3 text-white/90 hover:text-white bg-black/20 hover:bg-black/40 rounded-full w-8 h-8 flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-white/40 shadow-sm"
                                 aria-label="Close confirmation modal"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,7 +359,7 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h3 id="enquiry-confirmed-title" className="text-lg sm:text-xl font-bold">Enquiry Confirmed!</h3>
+                            <h3 id="enquiry-confirmed-title" className="text-lg sm:text-xl font-bold tracking-tight">Enquiry Confirmed!</h3>
                             <p className="text-emerald-100 text-[11px] sm:text-xs mt-1 max-w-xs mx-auto">
                                 Your booking request has been successfully dispatched to our team.
                             </p>
@@ -424,7 +430,8 @@ export default function PropertyContactSidebar({ propertyName = "Rustomjee Urban
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
